@@ -1,16 +1,42 @@
-\documentclass[draft]{article}
+\documentclass[draft, a4paper]{article}
 
 \usepackage{setspace}
-\usepackage{lipsum}
+\usepackage{subfiles}
 
 \doublespacing
 
 \begin{document}
 
-\title{Title}
+\title{Applications of Lightweight Formal Methods in Engineering Software}
 \author{Tristan Dyer}
 \maketitle
 
-\lipsum[1]
+\begin{abstract}
+Boop.
+\end{abstract}
+
+\section{Introduction/Background}
+\subfile{sections/introduction}
+
+\section{Problem Statement}
+\subfile{sections/problem-statement}
+
+\section{Literature Review}
+\subfile{sections/lit-review}
+
+\section{Methodology}
+\subfile{sections/methodology}
+
+\section{Overview of Chapters}
+\subfile{sections/chapters}
+
+\section{Plan of Work}
+\subfile{sections/plan-of-work}
+
+\section{Bibliography}
+\subfile{sections/bibliography}
+
+\section{Appendices}
+\subfile{sections/appendices}
 
 \end{document}
