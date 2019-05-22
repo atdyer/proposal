@@ -2,6 +2,76 @@
 
 \begin{document}
 
-Find common programming paradigms in scientific software design and model them.
+Although the tools and techniques most identified with scientific
+computation are those of numerical analysis---where error prediction,
+stability, and convergence are central concerns---such an enterprise
+offers little guidance in the development process, where early
+decisions about decomposition and organization establish program
+structure.  I suggest an approach that separates concerns: isolating
+the structural and behavioral components from the numerics, allowing
+scientists and engineers to more effectively reason about the programs
+they create.  In many cases, the interstitial machinery is itself a
+complex apparatus, as we find in the case of adaptive, multiscale,
+multiphysics applications, for instance, and these are aspects of a
+program that warrant increased scrutiny and care.  The approach is
+well-suited for lightweight tools like Alloy~\cite{jackson2012}, a
+state-based formalism that combines declarative modeling and bounded
+model checking.  The application of state-based methods in scientific
+computation is relatively uncharted territory, as there is little
+community experience in working with formal methods.  
+
+When we refer to scientific
+software, we think primarily of problems expressed as mathematical
+models, where approximate solutions are sought for differential or
+integral equations that have no closed form solution.  As a result,
+they must be discretized to produce a finite system of equations that can then be solved by algebraic methods.  Ocean circulation models, for
+instance, may be expressed as a system of hyperbolic partial
+differential equations, and solved by finite element or other numeric
+schemes.  Because they represent aspects of the physical and natural
+world, the terms and parameters appearing in the equations capture rich
+state in the form of spatial, geometric, material, topological, and
+other attributes.  The types of discretizations that may be employed in
+both time and space are varied, and each has its own performance,
+accuracy, and ease-of-development implications.
+
+In addition to the complexities involved in representing and solving a
+mathematical model in computer software, we must also recognize that
+these artifacts do not exist in a vacuum.  Innovation in both the
+hardware and software industries often drive change at a pace that
+developers of scientific software find difficult to maintain.  Examples
+include new applications of hardware such as GPUs to general purpose
+computation, new highly performant software platforms such as web-based
+computation, evolving user interface capabilities, and new and evolving
+languages that offer varying levels of convenience and performance. 
+Approaching the development of scientific software with the knowledge
+that the software must exist in a modern ecosystem of emerging and
+evolving technologies requires a deeper understand of how the machinery
+of that software might also evolve, without effecting the underlying
+numerics.  
+
+The approach taken in this research is to identify the essential complexities of common paradigms found in scientific software and to determine whether formal methods might help in reasoning about these complexities.  The following sections each give a brief description of an application that will be explored, describing the inherent structural complexities presented by that case.  Each case presents challenges to the developer, both from the perspective of accurately representing an inherently mathematical problem, as well as the perspective of existing in an ecosystem that is constantly evolving.
+
+\subsection{Moment Distribution}
+
+Well-known among civil engineers, the moment distribution method~\cite{} is an iterative technique for finding the internal member forces that develop in building structures when external forces are applied to them.  The calculations can be performed by hand, and the rapid convergence of the method in practice made it possible for engineers to estimate internal forces in just a few iterations.  Although the method has been largely superceded by the convenience and availability of more general computational approaches, it was the primary tool used by engineers to analyze reinforced concrete structures well into the 1960s.
+
+Concieved in the 1920s, before the advent of computers, the method nonetheless displays features that are interesting from a computational perspective.  Intuitively, the method works by ``clamping'' joints, applying external loads, and then successively releasing them, allowing them to rotate, and reclamping them. Each time, the internal forces at the joints are distributed based on the relative stiffnesses of the adjoining members.  The method converges under a variety of distribution sequences, e.g. varying the order in which joints are unclamped.  In addition, there is inherent concurrency in the method since internal forces can be distributed simultaneously and summed.
+
+\subsection{Sparse Matrices}
+
+\subsection{Finite Element Meshes}
+
+\subsection{Data Visualization and UI Design}
+
+
+Moment distribution.
+
+Sparse matrices.
+
+Finite element meshes.
+
+UI Design.
+
+
 
 \end{document}
