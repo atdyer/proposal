@@ -2,75 +2,35 @@
 
 \begin{document}
 
-Although the tools and techniques most identified with scientific
-computation are those of numerical analysis---where error prediction,
-stability, and convergence are central concerns---such an enterprise
-offers little guidance in the development process, where early
-decisions about decomposition and organization establish program
-structure.  I suggest an approach that separates concerns: isolating
-the structural and behavioral components from the numerics, allowing
-scientists and engineers to more effectively reason about the programs
-they create.  In many cases, the interstitial machinery is itself a
-complex apparatus, as we find in the case of adaptive, multiscale,
-multiphysics applications, for instance, and these are aspects of a
-program that warrant increased scrutiny and care.  The approach is
-well-suited for lightweight tools like Alloy~\cite{jackson2012}, a
-state-based formalism that combines declarative modeling and bounded
-model checking.  The application of state-based methods in scientific
-computation is relatively uncharted territory, as there is little
-community experience in working with formal methods.  
+Although the tools and techniques most identified with scientific computation are those of numerical analysis---where error prediction, stability, and convergence are central concerns---such an enterprise offers little guidance in the development process, where early decisions about decomposition and organization establish program structure.  The structure and behavior of scientific programs constitute a kind of essential complexity that is not merely a byproduct of inconvenient languages or other accidental complexities, to employ a distinction made by Brooks~\cite{brooks} about software engineering.  By \emph{structure} we mean static relationships between elements of program state, that is, an assignment of values to variables.  By \emph{behavior} we mean dynamic relationships, that is, a sequence of states or steps in a computation, which may include nondeterminism to avoid over-specification. In many cases, this interstitial machinery is itself a complex apparatus, as we find in the case of adaptive, multi-scale, multi-physics applications, for instance, and these are aspects of a program that warrant increased scrutiny and care.  I suggest an approach that separates concerns: isolating the structural and behavioral components from the numerics, allowing scientists and engineers to more effectively reason about the programs they create.  The approach is well-suited for lightweight tools like Alloy~\cite{jackson2012}, a state-based formalism that combines declarative modeling and bounded model checking.  The application of state-based methods in scientific computation is relatively uncharted territory, as there is little community experience in working with formal methods.  
 
-When we refer to scientific
-software, we think primarily of problems expressed as mathematical
-models, where approximate solutions are sought for differential or
-integral equations that have no closed form solution.  As a result,
-they must be discretized to produce a finite system of equations that can then be solved by algebraic methods.  Ocean circulation models, for
-instance, may be expressed as a system of hyperbolic partial
-differential equations, and solved by finite element or other numeric
-schemes.  Because they represent aspects of the physical and natural
-world, the terms and parameters appearing in the equations capture rich
-state in the form of spatial, geometric, material, topological, and
-other attributes.  The types of discretizations that may be employed in
-both time and space are varied, and each has its own performance,
-accuracy, and ease-of-development implications.
+When we refer to scientific software, we think primarily of problems expressed as mathematical models, where approximate solutions are sought for differential or integral equations that have no closed form solution.  As a result, they must be discretized to produce a finite system of equations that can then be solved by algebraic methods.  Ocean circulation models, for instance, may be expressed as a system of hyperbolic partial differential equations, and solved by finite element or other numeric schemes.  Because they represent aspects of the physical and natural world, the terms and parameters appearing in the equations capture rich state in the form of spatial, geometric, material, topological, and other attributes.  The types of discretizations that may be employed in both time and space are varied, and each has its own performance, accuracy, and ease-of-development implications.
 
-In addition to the complexities involved in representing and solving a
-mathematical model in computer software, we must also recognize that
-these artifacts do not exist in a vacuum.  Innovation in both the
-hardware and software industries often drive change at a pace that
-developers of scientific software find difficult to maintain.  Examples
-include new applications of hardware such as GPUs to general purpose
-computation, new highly performant software platforms such as web-based
-computation, evolving user interface capabilities, and new and evolving
-languages that offer varying levels of convenience and performance. 
-Approaching the development of scientific software with the knowledge
-that the software must exist in a modern ecosystem of emerging and
-evolving technologies requires a deeper understand of how the machinery
-of that software might also evolve, without effecting the underlying
-numerics.  
+In addition to the complexities involved in representing and solving a mathematical model in computer software, we must also recognize that these artifacts do not exist in a vacuum.  Innovation in both the hardware and software industries often drive change at a pace that developers of scientific software find difficult to maintain.  Examples include new applications of hardware such as GPUs in general purpose computation, new highly performant software platforms such as web-based computation, evolving user interface capabilities, and new and evolving languages that offer varying levels of convenience and performance.  Approaching the development of scientific software with the knowledge that the software must exist in a modern ecosystem of emerging and evolving technologies requires a deeper understand of how the machinery of that software might also evolve, without effecting the underlying numerics.
 
-The approach taken in this research is to identify the essential complexities of common paradigms found in scientific software and to determine whether formal methods might help in reasoning about these complexities.  The following sections each give a brief description of an application that will be explored, describing the inherent structural complexities presented by that case.  Each case presents challenges to the developer, both from the perspective of accurately representing an inherently mathematical problem, as well as the perspective of existing in an ecosystem that is constantly evolving.
+The approach taken in this research is to identify the essential complexities of common paradigms found in scientific software and to determine whether formal methods might help in reasoning about these complexities.  The following sections are organized as follows.  First, to give context and some background, we discuss the elements of formal methods that will be used in this research.  Second, I give brief descriptions of specific applications that will be explored, describing the inherent structural complexities presented, as well as the elements of formal methods I expect to use in modeling each case.  These applications were chosen because, to varying extents, they each present challenges to the developer, both from the perspective of accurately representing an inherently mathematical problem, as well as the perspective of existing in an ecosystem that is constantly evolving.  Finally, we discuss the applications and tools that will be developed in order to aid scientists and engineers in the application of these methods in practice.
 
-\subsection{Moment Distribution}
+\subsection{Lightweight Formal Methods}
 
-Well-known among civil engineers, the moment distribution method~\cite{} is an iterative technique for finding the internal member forces that develop in building structures when external forces are applied to them.  The calculations can be performed by hand, and the rapid convergence of the method in practice made it possible for engineers to estimate internal forces in just a few iterations.  Although the method has been largely superceded by the convenience and availability of more general computational approaches, it was the primary tool used by engineers to analyze reinforced concrete structures well into the 1960s.
+State-based or model-oriented approaches describe a system by defining what constitutes a state and the transitions between states, or operations.  The state-based formalism employed in this research will be Alloy~\cite{jackson2012}, a declarative modeling language that combines first-order logic with relational calculus and associated operators, as well as transitive closure.  It offers rich data modeling features based on class-like structures and an automatic form of analysis that is performed within a bounded scope using a SAT solver.  For \emph{simulation}, the analyzer can be directed to look for instances satisfying a property of interest.  For \emph{checking}, it looks for an instance violating an assertion: a counterexample.  The approach is \emph{scope complete} in the sense that all cases are checked within user-specified bounds.  Alloy's logic supports three distinct styles of expression, that of predicate calculus, navigation expressions, and relational calculus.  The language used for modeling is also used for specifying the properties to be checked.
 
-Concieved in the 1920s, before the advent of computers, the method nonetheless displays features that are interesting from a computational perspective.  Intuitively, the method works by ``clamping'' joints, applying external loads, and then successively releasing them, allowing them to rotate, and reclamping them. Each time, the internal forces at the joints are distributed based on the relative stiffnesses of the adjoining members.  The method converges under a variety of distribution sequences, e.g. varying the order in which joints are unclamped.  In addition, there is inherent concurrency in the method since internal forces can be distributed simultaneously and summed.
+From Alloy's declarative underpinnings comes expressive power and an effective means of reducing complexity and probing designs.  As Jackson writes~\cite{jackson2012}, code is a poor medium for exploring abstractions, and tools like Alloy offer modeling environments that support an iterative design scenario akin to what might be performed by, say, a civil engineer designing a bridge. The approach is sometimes referred to as lightweight~\cite{} because there is \emph{partiality in modeling}---a focused application of the method---and \emph{partiality in analysis}, since the verification being performed is bounded.  With respect to the latter, and on the value of the approach, we appeal to the \emph{small scope hypothesis}: if an assertion is invalid, it probably has a small counterexample~\cite{}. out approach may be considered lightweight in an additional sense: we are able to draw useful conclusions about scientific software without simultaneously reproducing semantic proofs of numerical analysis.
 
-\subsection{Sparse Matrices}
+\subsection{Applications of Lightweight Formal Methods}
 
-\subsection{Finite Element Meshes}
+\subsubsection{Moment Distribution}
 
-\subsection{Data Visualization and UI Design}
+Well-known among civil engineers, the moment distribution method~\cite{} is an iterative technique for finding the internal member forces that develop in building structures when external forces are applied to them.  The calculations can be performed by hand, and the rapid convergence of the method in practice makes it possible for engineers to estimate internal forces in just a few iterations.  Although the method has been largely superseded by the convenience and availability of more general computational approaches, it was the primary tool used by engineers to analyze reinforced concrete structures well into the 1960s.
 
+Conceived in the 1920s, before the advent of computers, the method nonetheless displays features that are interesting from a computational perspective.  Intuitively, the method works by ``clamping'' joints, applying external loads, and then successively releasing them, allowing them to rotate, and reclamping them. Each time, the internal forces at the joints are distributed based on the relative stiffnesses of the adjoining members.  The method converges under a variety of distribution sequences, e.g. varying the order in which joints are unclamped.  In addition, there is inherent concurrency in the method since internal forces can be distributed simultaneously and summed.
 
-Moment distribution.
+\subsubsection{Sparse Matrices}
 
-Sparse matrices.
+\subsubsection{Finite Element Meshes}
 
-Finite element meshes.
+\subsubsection{Data Visualization and UI Design}
 
-UI Design.
+\subsection{Applications and Tools}
 
 
 
