@@ -12,26 +12,69 @@ The approach taken in this research is to identify the essential complexities of
 
 \subsection{Lightweight Formal Methods}
 
-State-based or model-oriented approaches describe a system by defining what constitutes a state and the transitions between states, or operations.  The state-based formalism employed in this research will be Alloy~\cite{jackson2012}, a declarative modeling language that combines first-order logic with relational calculus and associated operators, as well as transitive closure.  It offers rich data modeling features based on class-like structures and an automatic form of analysis that is performed within a bounded scope using a SAT solver.  For \emph{simulation}, the analyzer can be directed to look for instances satisfying a property of interest.  For \emph{checking}, it looks for an instance violating an assertion: a counterexample.  The approach is \emph{scope complete} in the sense that all cases are checked within user-specified bounds.  Alloy's logic supports three distinct styles of expression, that of predicate calculus, navigation expressions, and relational calculus.  The language used for modeling is also used for specifying the properties to be checked.
+State-based or model-oriented approaches describe a system by defining what constitutes a state and the transitions between states, or operations.  The state-based formalisms employed in this research will be Alloy~\cite{jackson2012}, a declarative modeling language that combines first-order logic with relational calculus and associated operators, as well as transitive closure, and Electrum~\cite{}, a temporal extension to Alloy that introduces the concepts of linear temporal logic into the Alloy language.  Alloy offers rich data modeling features based on class-like structures and an automatic form of analysis that is performed within a bounded scope using a SAT solver.  For \emph{simulation}, the analyzer can be directed to look for instances satisfying a property of interest.  For \emph{checking}, it looks for an instance violating an assertion: a counterexample.  The approach is \emph{scope complete} in the sense that all cases are checked within user-specified bounds.  Alloy's logic supports three distinct styles of expression, that of predicate calculus, navigation expressions, and relational calculus.  The language used for modeling is also used for specifying the properties to be checked.
 
-From Alloy's declarative underpinnings comes expressive power and an effective means of reducing complexity and probing designs.  As Jackson writes~\cite{jackson2012}, code is a poor medium for exploring abstractions, and tools like Alloy offer modeling environments that support an iterative design scenario akin to what might be performed by, say, a civil engineer designing a bridge. The approach is sometimes referred to as lightweight~\cite{} because there is \emph{partiality in modeling}---a focused application of the method---and \emph{partiality in analysis}, since the verification being performed is bounded.  With respect to the latter, and on the value of the approach, we appeal to the \emph{small scope hypothesis}: if an assertion is invalid, it probably has a small counterexample~\cite{}. out approach may be considered lightweight in an additional sense: we are able to draw useful conclusions about scientific software without simultaneously reproducing semantic proofs of numerical analysis.
+From Alloy's declarative underpinnings comes expressive power and an effective means of reducing complexity and probing designs.  As Jackson writes~\cite{jackson2012}, code is a poor medium for exploring abstractions, and tools like Alloy offer modeling environments that support an iterative design scenario akin to what might be performed by, say, a civil engineer designing a bridge. The approach is sometimes referred to as lightweight~\cite{} because there is \emph{partiality in modeling}---a focused application of the method---and \emph{partiality in analysis}, since the verification being performed is bounded.  With respect to the latter, and on the value of the approach, we appeal to the \emph{small scope hypothesis}: if an assertion is invalid, it probably has a small counterexample~\cite{}.  Our approach may be considered lightweight in an additional sense: we are able to draw useful conclusions about scientific software without simultaneously reproducing semantic proofs of numerical analysis.
 
 \subsection{Applications of Lightweight Formal Methods}
 
+The following are specific applications of lightweight formal methods that will be explored in this research.
+
 \subsubsection{Moment Distribution}
 
-Well-known among civil engineers, the moment distribution method~\cite{} is an iterative technique for finding the internal member forces that develop in building structures when external forces are applied to them.  The calculations can be performed by hand, and the rapid convergence of the method in practice makes it possible for engineers to estimate internal forces in just a few iterations.  Although the method has been largely superseded by the convenience and availability of more general computational approaches, it was the primary tool used by engineers to analyze reinforced concrete structures well into the 1960s.
+Moment distribution~\cite{} is an iterative technique, well-known among civil engineers, for finding the internal member forces that develop in building structures when external forces are applied to them.  In its most general form, the method is similar to asynchronous, chaotic relaxation algorithms, where portions of a building structure converge numerically at differing rates as the computation unfolds, depending on the process scheduling.  The nondeterminism available here is also inherent in methods used to solve elliptic partial differential equations, which may exploit nondeterminism in different ways depending on problem characteristics and hardware features. 
 
-Conceived in the 1920s, before the advent of computers, the method nonetheless displays features that are interesting from a computational perspective.  Intuitively, the method works by ``clamping'' joints, applying external loads, and then successively releasing them, allowing them to rotate, and reclamping them. Each time, the internal forces at the joints are distributed based on the relative stiffnesses of the adjoining members.  The method converges under a variety of distribution sequences, e.g. varying the order in which joints are unclamped.  In addition, there is inherent concurrency in the method since internal forces can be distributed simultaneously and summed.
+Although it could be considered a `toy' problem, the moment distribution method displays structural and behavioral features that are interesting from a computational perspective and commonly found in broad range of scientific software.  The structural components of the problem and the topological relationships between those components are concepts that are found in, for example, methods that require a spatial discretization such as finite volume and finite elements.  The implicitness supported by Alloy allows us to work with arbitrary spatial discretizations, and starting with a simple problem such at this will allow us to build upon the conclusions drawn as more sophisticated models are developed through further abstraction and refinement.
+
+WORK ON THIS:
+Similarly, the behavioral components of moment distribution can be found in a large class of problems that exhibit similar levels of inherent parallelism.  Alloy does not impose fixed idioms and can 
+
+* common structural components: data at discrete spatial points (topology)
+* common communication patterns: transfer of data between discrete spatial points (implicitly parallel)
+
+% Well-known among civil engineers, the moment distribution method~\cite{} is an iterative technique for finding the internal member forces that develop in building structures when external forces are applied to them.  The calculations can be performed by hand, and the rapid convergence of the method in practice makes it possible for engineers to estimate internal forces in just a few iterations.  Although the method has been largely superseded by the convenience and availability of more general computational approaches, it was the primary tool used by engineers to analyze reinforced concrete structures well into the 1960s.
+
+% Conceived in the 1920s, before the advent of computers, the method nonetheless displays features that are interesting from a computational perspective.  Intuitively, the method works by ``clamping'' joints, applying external loads, and then successively releasing them, allowing them to rotate, and reclamping them. Each time, the internal forces at the joints are distributed based on the relative stiffnesses of the adjoining members.  The method converges under a variety of distribution sequences, e.g. varying the order in which joints are unclamped.  In addition, there is inherent concurrency in the method since internal forces can be distributed simultaneously and summed.
 
 \subsubsection{Sparse Matrices}
 
+The types of problems found in scientific and engineering software frequently require a discretization over some continuous domain, resulting in a system of equations that can be solved using linear algebraic methods.  As a result, it is not uncommon to find powerful linear algebra libraries at the core of some piece of scientific software.  These libraries, some of which have existed for decades, provide us with a unique perspective, one that lends itself to software modeling: while the underlying mathematics have remained constant, the structural and behavioral components of the libraries have had to adapt as evolving technologies have created potentially new performance benefits.  For example, the advent of massively parallel systems, in concert with the introduction of general purpose computing on GPUs, has resulted in systems that are capable of incredible data throughput.  These systems can employ numerous types of processors, each built on different memory models and each capable of leveraging multiple types of parallelism.  As a result, many linear algebra libraries have adapted in order to properly leverage the performance benefits made available by these types of systems.
+
+Often, the methods of discretization that are employed in scientific software, such as in the finite element method, will result in a system of equations that can be represented using sparse matrices---matrices in which the majority of the values they contain are zero.  As such, most linear algebra libraries provide very fast and efficient computational methods for representing and using sparse matrices.  From the structural perspective, there are many different ways of representing a sparse matrix in memory, each with strengths in some applications and weaknesses in others.  For example, the DOK (dictionary of keys) format excels at matrix assembly, but is slower compared to other formats when being used in some algebraic operation.  Conversely, the CSR (compressed sparse row) format excels when used in certain matrix operations, such as matrix-vector multiplication, but is slower to assemble than others.  From a behavioral perspective, the algorithmic implementation used to perform an algebraic operation is highly dependent on the format, i.e. the memory layout, used to represent the sparse matrix.
+
+Nonetheless, all sparse matrix formats and the corresponding algorithms used in algebraic expressions represent exactly the same thing at an abstract, mathematical level.  This presents us with a valuable opportunity to model these formats and operations, the benefits of which are threefold: 
+
+\begin{enumerate}
+	\item To provide a clear and useful example of how both data and procedural refinement can be used in scientific and engineering software development.
+	\item To verify that all formats and operations are accurate representations of the underlying mathematics.
+	\item To provide model that can be built upon as new technologies and techniques are developed, in order to ease development and instill confidence in implementations.
+\end{enumerate}
+
+In this research, I will create an abstract model of a sparse matrix as well as the sparse matrix-vector multiplication operation.  I will then create models of the DOK and CSR sparse matrix formats and use abstractions functions along with implication to verify that the data refinement is sound.  Additionally, for both formats I will model the sparse matrix-vector multiplication operation and similarly use abstraction functions and implications to verify that the procedural refinements are sound.  Finally, I will create a concrete implementation of both formats and their corresponding operations in order to show the complete story as a guide to engineers and scientists---beginning with a mathematical problem, how might one go through the process of incrementally stepping through the modeling process, moving closer to an implementation at each step, and finally writing a concrete implementation.
+
 \subsubsection{Finite Element Meshes}
+
+The finite element method is extremely common in modern scientific software and can be used to solve a wide range of mathematical problems.
+
+Things to model in meshes:
+* Element shape
+* Topology requirements: connectivity limitations, dimensions, continuity, etc.
+* Element order: linear, quadratic, etc.
+* Features: adaptivity
+* Abstractions levels: node/element, arrays, etc.
 
 \subsubsection{Data Visualization and UI Design}
 
+* Finite element visualization and exploration in a modern ecosystem, i.e. web browser.
+* Getting data organized
+* Communication between various components: GPU, worker threads, main thread
+* Communicating effectively with the user about what data is available, what the tool is actively doing, how to interact with data, etc.
+* Lightweight formal methods can even be used to ensure that simple user interfaces remain correct -- ellipse tool case in point.
+
 \subsection{Applications and Tools}
 
+Alloy is a general purpose tool - not always the best visualizations.
+Created a few tools to make Alloy a little more suitable to the scientific computation and the types of problems I've modeled (meshes mostly)
 
 
 \end{document}
