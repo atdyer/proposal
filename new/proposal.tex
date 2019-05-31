@@ -1,4 +1,4 @@
-\documentclass[11pt]{article}
+\documentclass[12pt]{article}
 
 \usepackage[letterpaper,margin=1in]{geometry}
 
@@ -7,10 +7,14 @@
 \usepackage{natbib}
 \setcitestyle{square}
 
-\PassOptionsToPackage{hyphens}{url}\usepackage{hyperref}
+\PassOptionsToPackage{hyphens}{url}\usepackage[hidelinks]{hyperref}
 \urlstyle{rm}
 
 \begin{document}
+
+\title{Applications of Lightweight Formal Methods in Engineering and Scientific Software Design}
+\author{Tristan Dyer}
+\maketitle
 
 \section{Introduction}
 
@@ -108,8 +112,7 @@ different ways in different programming languages, and so
 demonstrating the relationship to code is
 important and also within the scope of the research.
 
-Below I provide background on lightweight formal methods and some of the characteristics of scientific programs that inform the approach, which is based on a separation of concerns that accounts for numerical computations.  I also describe what is meant by software abstractions, and provide a simple example that illustrates the rationale for viewing scientific programs as I do.  
-Here I need to talk about everything I'm gonna make.
+Below I provide background on lightweight formal methods and some of the characteristics of scientific programs that inform the approach, which is based on a separation of concerns that accounts for numerical computations.  I also describe what is meant by software abstractions, and provide a simple example that illustrates the rationale for viewing scientific programs as I do.
 
 \subsection{Lightweight Formal Methods}
 
@@ -246,20 +249,111 @@ eigenvalues.  Instead, results of numerical analyses may be brought
 into the modeling process in the form of invariants and other
 structural properties.
 
+\subsection{Software Ecosystem}
+
 With respect to numerical analysis, the form of the results needed
 from the effort may vary, but this type of work may be conducted
 independently and used to inform the process undertaken when reasoning
 about the interstitial machinery so that the overall conclusions are
-sound, as we illustrate in Section~\ref{sec:example}.  Beyond that
-example and an appeal to experience, a supporting idea for
-the claim is the following:
+sound.  Beyond that example, we must further recognize that these artifacts do not exist in a vacuum.  While the numerical analyses for scientific computations remain unchanged, their application must evolve throughout a broad range of implementation choices and modifications, changes in libraries and solvers, and diverse hardware upgrades, over the life of the program.
+% The numerical analyses performed for scientific computations often apply, unchanged, throughout a broad range of implementation choices and modifications, changes in libraries and solvers, and diverse hardware upgrades, over the life of the program.
+Examples include new applications for hardware such as GPUs in general purpose computation, new software platforms such as web-based computation, evolving user interface and data interaction capabilities, and new and evolving languages that offer varying levels of convenience and performance.  Approaching the development of scientific software with the knowledge that the software must exist in a modern ecosystem of emerging and evolving technologies requires a deeper understand of how the machinery of that software might also evolve, without adversely effecting the underlying numerics.
+
+\section{Contributions}
+
+I expect to make significant intellectual contributions to the design and understanding of scientific software systems.  The contributions result from the application of the following concepts:
+
+\begin{itemize}
+    \item \emph{Software abstractions:}  The distinction between an implementation and its essential structure and behavior is made too infrequently in scientific software development.  By separating concerns, we avoid overcommitting to implementation languages and other details, which allows us to develop and communicate transferable design and quality assurance concepts.  I plan to address these in the context of a number of case studies that span a broad range of abstractions and computational complexities.  In developing and advancing a methodology of designing and working with software abstractions, my contributions have the potential to change the way a rather different class of developers thinks about programming.
+    \item \emph{Lightweight formal methods:}  A significant component of the research is on how to do modeling, with a focus on design thinking and constructing arguments that rely on the existing tools of numerical analysis and lightweight formal methods.  In taking the perspective of separating concerns in scientific software, I will be exploring the relationship between numerical analysis and tools like Alloy in a way that has not been previously attempted.
+    \item \emph{Analysis tools:}  As the application of lightweight formal methods to scientific software development is a new area of research, domain specific tools to aid modelers simply do not exist.  Additionally, tools such as the Alloy Analyzer are purposely designed with generality in mind: they make no assumptions about the ecosystems in which they exist, relying solely on the mathematics upon which they are built.  Therefore, visualizations generated from tools like Alloy make no assumptions about the models they represent.  Certain applications of formal methods, as in representing a planar mesh, may warrant an opinionated visualization in order to aid in the interpretation of model results.  As such, I will develop tools for this purpose, advancing the ecosystem of modeling tools as well as lowering the barrier to entry into software modeling for developers of scientific software.
+\end{itemize}
+
+\section{Overview of Chapters}
+
+\subsection{Moment Distribution}
+
+Declarative languages like Alloy are expressive, combining the quantifiers of first-order logic and the operators of relational calculus, but it is not always clear how they can be used to specify a problem.  There are no special constructs for parallelism, message-passing, synchronization or other mechanisms that give some insight into what one is ``supposed'' to do with it.  In other words, there are few affordances~\citep{norman1999}, \label{affordances} or ``action possibilities'' that are readily perceivable.
+
+To make this type of modeling more accessible, we begin with what might be considered a `toy' problem---the moment distribution method~\citep{cross1930}---that despite its apparent simplicity, displays structural and behavioral features that are commonly found in a broad range of scientific software.  The method is an iterative technique, well-known among civil engineers, for finding the internal member forces that develop in building structures when external forces are applied to them.  The topological relationships between the structural components are similar to those found in, for example, methods requiring a spatial discretization such as finite volume and finite elements.  Similarly, the behavioral components of the method exhibit communication patterns often encountered in scientific software.  In its most general form, the method is similar to asynchronous, chaotic relaxation algorithms, where portions of a building structure converge numerically at differing rates as the computation unfolds, depending on the process scheduling.  The nondeterminism available here is also inherent in methods used to solve elliptic partial differential equations, which may exploit nondeterminism in different ways depending on problem characteristics and hardware features. 
+
+%The moment distribution method~\citep{cross1930} is an iterative technique, well-known among civil engineers, for finding the internal member forces that develop in building structures when external forces are applied to them.  In its most general form, the method is similar to asynchronous, chaotic relaxation algorithms, where portions of a building structure converge numerically at differing rates as the computation unfolds, depending on the process scheduling.  The nondeterminism available here is also inherent in methods used to solve elliptic partial differential equations, which may exploit nondeterminism in different ways depending on problem characteristics and hardware features. 
+
+%Although it could be considered a `toy' problem, the moment distribution method displays structural and behavioral features that are interesting from a computational perspective and commonly found in broad range of scientific software.  The structural components of the problem and the topological relationships between those components are concepts that are found in, for example, methods that require a spatial discretization such as finite volume and finite elements.  The implicitness supported by Alloy allows us to work with arbitrary spatial discretizations, and starting with a simple problem such at this will allow us to build upon the conclusions drawn as more sophisticated models are developed through further abstraction and refinement.
+
+The combination of commonly found topological and communicative components exhibited by the moment distribution method presents us with an opportunity to explore the inherent structural and behavioral complexities at numerous levels of abstraction.  The models created to represent and reason about these complexities can then be used as a starting point when approaching problems that have structural and behavioral similarities.  This template-based approach is described by \cite{schrage1991}, who contrasts it with, as he calls it, a constructive approach for formulating models, where one starts with a blank sheet.  About the template approach, he says 
+
 \begin{quote}
-The numerical analyses performed for scientific computations often
-apply, unchanged, throughout a broad range of implementation choices
-and modifications, changes in libraries and solvers, and diverse
-hardware upgrades, over the life of the program.
+``In this approach, examples of standard applications are illustrated
+in substantial detail. If you have a problem that closely resembles
+one of these `template' models, you may be able to adjust it to your
+situation by making modest changes to the template model.''
 \end{quote}
 
+\subsection{Sparse Matrices}
+
+The types of problems found in scientific and engineering software frequently require a discretization over some continuous domain, resulting in a system of equations that can be solved using linear algebraic methods.  As a result, it is not uncommon to find powerful linear algebra libraries at the core of some piece of scientific software.  These libraries, some of which have existed for decades, provide us with a unique perspective, one that lends itself to software modeling: while the underlying mathematics have remained constant, the structural and behavioral components of the libraries have had to adapt as evolving technologies have created potentially new performance benefits.  For example, the advent of massively parallel systems, in concert with the introduction of general purpose computing on GPUs, has resulted in systems that are capable of incredible data throughput.  These systems can employ numerous types of processors, each built on different memory models and each capable of leveraging multiple types of parallelism.  As a result, many linear algebra libraries have adapted in order to properly leverage the performance benefits made available by these types of systems.
+
+Often, the methods of discretization that are employed in scientific software, such as in the finite element method, will result in a system of equations that can be represented using sparse matrices---matrices in which the majority of the values they contain are zero.  As such, most linear algebra libraries provide very fast and efficient computational methods for representing and using sparse matrices.  From the structural perspective, there are many different ways of representing a sparse matrix in memory, each with strengths in some applications and weaknesses in others.  For example, the DOK (dictionary of keys) format excels at matrix assembly, but is slower compared to other formats when being used in some algebraic operation.  Conversely, the CSR (compressed sparse row) format excels when used in certain matrix operations, such as matrix-vector multiplication, but is slower to assemble than others.  From a behavioral perspective, the algorithmic implementation used to perform an algebraic operation is highly dependent on the format, i.e. the memory layout, used to represent the sparse matrix.
+
+Nonetheless, all sparse matrix formats and the corresponding algorithms used in algebraic expressions represent exactly the same thing at an abstract, mathematical level.  This presents us with a valuable opportunity to model these formats and operations, the benefits of which are threefold: 
+
+\begin{enumerate}
+    \item To provide a clear and useful example of how both data and procedural refinement can be used in scientific and engineering software development.
+    \item To verify that all formats and operations are accurate representations of the underlying mathematics.
+    \item To provide a model that can be built upon as new technologies and techniques are developed, in order to ease development and instill confidence in implementations.
+\end{enumerate}
+
+In this research, I will create an abstract model of a sparse matrix as well as the sparse matrix-vector multiplication operation.  I will then create models of the DOK and CSR sparse matrix formats and use abstractions functions along with implication to verify that the data refinement is sound.  Additionally, for both formats I will model the sparse matrix-vector multiplication operation and similarly use abstraction functions and implications to verify that the procedural refinements are sound.  Finally, I will create a concrete implementation of both formats and their corresponding operations in order to show the complete story as a guide to engineers and scientists---beginning with a mathematical problem, how might one go through the process of incrementally stepping through the modeling process, moving closer to an implementation at each step, and finally writing a concrete implementation.
+
+\subsection{Ocean Modeling}
+
+Coastal flooding from tropical storms is the result of large-scale
+processes whose simulation is computationally demanding.  Used to
+predict the geographic extent and severity of storm effects, ocean
+circulation models are essential tools for evacuation planning,
+vulnerability assessment, and infrastructure design.  In order to
+capture the resulting hydrodynamics as accurately and efficiently as
+possible, models employ a variety of mechanisms that, while improving
+performance, can also lead to complex software implementations.  Based
+on numerical techniques such as finite element
+methods~\citep{zienkiewicz2013}, these models start from a
+characterization of wind velocities, atmospheric pressure, and land
+and seafloor surfaces to produce time histories of spatially varying
+water surface elevations and velocities.  Ocean circulation models are
+designed to perform these large-scale simulations while incorporating
+both tidal effects and more extreme storm events into the analysis.
+
+As in other areas of science, validation of the models is based on
+observational comparisons and, as much as anything, review and
+evaluation by an active community of scientists and engineers.
+Quantities like wind, wave, and water level are compared with data
+from the National Data Buoy Center (NDBC), National Ocean Service
+(NOS) observation stations, high water marks, and other
+sources~\citep{hanson2013}.  In addition to such studies, since 2008 a
+regional testbed has been actively comparing the accuracy of ocean
+circulation models and their relative abilities to hindcast the
+effects of historical storms~\citep{sheng2012}.
+
+In order to reduce the computational cost of certain types of analyses, an extension called \emph{subdomain modeling}~\citep{baugh2015} was incorporated in ADCIRC v51.42 in early 2015 and in experimental versions years ahead of that. Subdomain modeling is an exact reanalysis technique that allows scientists and engineers to analyze the effects of an incremental problem change at an incremental computational cost. To realize a subdomain modeling capability in ADCIRC, boundary conditions must be imposed to accommodate a local change in a problem, and doing so results in a particularly tricky interaction with the program's discrete wet-dry algorithm, which lets floodwaters advance and recede.  Using Alloy~\citep{baugh2017}, relevant parts of ADCIRC were modeled in a way that enabled the exploration and optimization of possible boundary conditions, with insights then used to implement the actual extension in Fortran.
+
+It should be emphasized that ADCIRC itself, as it is implemented, is designed without any notion of data abstraction, but it most certainly has rich state, including geometric and topological relationships, which must be modeled to enable the type of analysis described above. While software abstractions built with Alloy could be used to inform a new implementation of ADCIRC and improve its program structure, doing so is not a prerequisite for making effective use of Alloy models. Still, the work referenced here is preliminary, and additional studies and applications are warranted.
+
+\paragraph{Finite Element Meshes.}  Fundamental to ocean modeling is the concept of discretizing what in reality are the continuous domains of space and time.  A byproduct of the process is that adjustments in the level of refinement employed ---both spatially and temporally--- can be used to make tradeoffs between the competing objectives of fidelity and computational performance.  That these kinds of adjustments can be made demonstrates why gains in computational performance are so significant: they can be used either directly, say, to provide greater lead time in an operational emergency management scenario, or indirectly, to increase fidelity without increasing computational cost.
+
+A spatial discretization commonly found in engineering software is that of the finite element mesh.  Properties of a finite element mesh, such as topology, dimensionality, and order are influenced by the physical system they represent.  ADCIRC, for example, uses linear two-dimensional triangular finite elements to represent the Earth's surface.  Similarly, the abstractions one might choose when developing software that uses a finite element mesh are influenced by the intended use case.  In the context of engineering design, finite element meshes are part of an iterative process; one involving mesh editing, simulation, and interpretation of simulation results.
+
+%In this research, software abstractions will be designed for finite element meshes, and will include applications that especially find utility in engineering scenarios.  
+
+What are finite element meshes?
+
+Identify some essential complexities.
+
+What am I going to model, and why will that be useful?
+
+What does an ENGINEER need? What abstractions help in developing tools for ENGINEERS? For meshes: automatic adaptivity, refinement, interactivity/editing, interpretation of results.
+
+I'm imagining OOP principles will be most useful for refinement, editing.  Arrays likely best for performance during simulation, but mix of OOP and arrays likely best for tradeoff with features needed during simulation such as adaptivity.  Indexed arrays very clearly best for visualization.  Coordinating multiple mesh representations...this is an iterative design process, so likely that you'll need to frequently switch between representations.
 
 \bibliographystyle{apalike}
 \bibliography{proposal}{}
