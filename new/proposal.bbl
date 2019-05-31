@@ -1,0 +1,107 @@
+\begin{thebibliography}{}
+
+\bibitem[Altuntas and Baugh, 2017]{altuntas2017asm}
+Altuntas, A. and Baugh, J. (2017).
+\newblock Adaptive subdomain modeling: A multi-analysis technique for ocean
+  circulation models.
+\newblock {\em Ocean Modelling}, 115:86--104.
+\newblock \url{https://doi.org/10.1016/j.ocemod.2017.05.009}.
+
+\bibitem[Baugh and Altuntas, 2017]{baugh2017}
+Baugh, J. and Altuntas, A. (2017).
+\newblock Formal methods and finite element analysis of hurricane storm surge:
+  A case study in software verification.
+\newblock {\em Science of Computer Programming}.
+\newblock \url{https://doi.org/10.1016/j.scico.2017.08.012}.
+
+\bibitem[Baugh, 1992]{baugh1992b}
+Baugh, J.~W. (1992).
+\newblock Using formal methods to specify the functional properties of
+  engineering software.
+\newblock {\em Computers \& Structures}, 45(3):557--570.
+\newblock \url{https://doi.org/10.1016/0045-7949(92)90440-B}.
+
+\bibitem[Bientinesi et~al., 2005]{bientinesi2005}
+Bientinesi, P., Gunnels, J.~A., Myers, M.~E., Quintana-Ort{\'\i}, E.~S., and
+  Geijn, R.~A. (2005).
+\newblock The science of deriving dense linear algebra algorithms.
+\newblock {\em ACM Transactions on Mathematical Software (TOMS)}, 31(1):1--26.
+
+\bibitem[Carver, 2009]{carver2009}
+Carver, J.~C. (2009).
+\newblock Report: The second international workshop on software engineering for
+  {CSE}.
+\newblock {\em Computing in Science \& Engineering}, 11(6):14--19.
+
+\bibitem[Faulk et~al., 2009]{faulk2009}
+Faulk, S., Loh, E., Van De~Vanter, M.~L., Squires, S., and Votta, L.~G. (2009).
+\newblock Scientific computing's productivity gridlock: How software
+  engineering can help.
+\newblock {\em Computing in Science \& Engineering}, 11(6):30--39.
+
+\bibitem[Hatton, 2007]{hatton2007}
+Hatton, L. (2007).
+\newblock The chimera of software quality.
+\newblock {\em Computer}, 40(8).
+
+\bibitem[Hatton and Roberts, 1994]{hatton1994}
+Hatton, L. and Roberts, A. (1994).
+\newblock How accurate is scientific software?
+\newblock {\em IEEE Transactions on Software Engineering}, 20(10):785--797.
+
+\bibitem[Jackson, 2012]{jackson2012}
+Jackson, D. (2012).
+\newblock {\em Software Abstractions: Logic, Language, and Analysis}.
+\newblock The MIT Press.
+
+\bibitem[Jackson and Damon, 1996]{jackson1996}
+Jackson, D. and Damon, C.~A. (1996).
+\newblock Elements of style: Analyzing a software design feature with a
+  counterexample detector.
+\newblock {\em IEEE Transactions on Software Engineering}, 22(7):484--495.
+
+\bibitem[Jackson and Wing, 1996]{jackson1996b}
+Jackson, D. and Wing, J. (1996).
+\newblock Lightweight formal methods.
+\newblock {\em Computer}, 29(4):21.
+
+\bibitem[Kelly, 2007]{kelly2007}
+Kelly, D.~F. (2007).
+\newblock A software chasm: Software engineering and scientific computing.
+\newblock {\em IEEE Software}, 24(6).
+
+\bibitem[Lamport, 2002]{lamport2002}
+Lamport, L. (2002).
+\newblock {\em Specifying Systems: The {TLA+} Language and Tools for Hardware
+  and Software Engineers}.
+\newblock Addison-Wesley Longman Publishing Co., Inc.
+
+\bibitem[Linz, 1988]{linz1988}
+Linz, P. (1988).
+\newblock A critique of numerical analysis.
+\newblock {\em Bulletin of the American Mathematical Society}, 19(2):407--416.
+
+\bibitem[Sanders and Kelly, 2008]{sanders2008}
+Sanders, R. and Kelly, D. (2008).
+\newblock Dealing with risk in scientific software development.
+\newblock {\em IEEE Software}, 25(4).
+
+\bibitem[Siegel et~al., 2008]{siegel2008}
+Siegel, S.~F., Mironova, A., Avrunin, G.~S., and Clarke, L.~A. (2008).
+\newblock Combining symbolic execution with model checking to verify parallel
+  numerical programs.
+\newblock {\em ACM Transactions on Software Engineering and Methodology
+  (TOSEM)}, 17(2):10.
+
+\bibitem[Storer, 2017]{storer2017}
+Storer, T. (2017).
+\newblock Bridging the chasm: A survey of software engineering practice in
+  scientific programming.
+\newblock {\em ACM Computing Surveys (CSUR)}, 50(4):47.
+
+\bibitem[Wilson, 2006]{wilson2006}
+Wilson, G.~V. (2006).
+\newblock Where's the real bottleneck in scientific computing?
+\newblock {\em American Scientist}, 94(1):5.
+
+\end{thebibliography}
