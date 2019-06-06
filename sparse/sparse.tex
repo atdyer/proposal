@@ -1,46 +1,104 @@
-\documentclass[12pt]{article}
-\usepackage[letterpaper, margin=1in]{geometry}
+\documentclass[11pt,conference]{IEEEtran}
+
+\usepackage{cite}
+\usepackage{url}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
 \begin{document}
 
-Sparse matrices are prevalent in scientific and engineering software. 
+\title{Sparse}
+\author{
+  \IEEEauthorblockN{Tristan Dyer}
+  \and
+  \IEEEauthorblockN{John Baugh}
+}
 
-Sparse matrices are prevalent.
-Sparse matrix implementations are notoriously difficult to get right because:
-* There are myriad sparse matrix formats.
-* Optimizing operations on formats is difficult: implementation choices depend on hardware requirements, data access patterns, etc.
+\maketitle
 
-Many solver libraries provide no assistance in data structure---they have format requirements and expect valid data as input.
+\section{Introduction}
 
+Computations on sparse matrices are prevalent in scientific and engineering software.  Sparse matrix data formats are able to compress large matrices with a small number of non-zero elements into a more efficient representation.  The development of software that makes use of sparse matrices is a tedious and often error-prone task because of the myriad data formats and complexities involved in tuning the operations on these formats to achieve an efficient implementation.
 
-Sparse matrix libraries that provide data abstractions aim to address these issues.
-May not provide formats compatible with the type of solver required...
-Not very useful in developing new algorithms...
-May not fit into ecosystem: library restrictions, performance requirements, etc.
+Characterize sparse matrix codes. Written in imperative languages like C and Fortran.  Structure of sparse format interspersed with computation.  
 
-Much ongoing research targets compilers:
-* Give compiler a dense matrix program and allow it to determine storage formats when it comes across a sparse matrix.
-* Tell the compiler what the sparse format is (abstractly) and allow it to worry about implementation details.
+A number of approaches have been taken in order to address these issues.  Object-oriented libraries such as PETSc~\cite{petsc2019} and Eigen~\cite{eigenweb2010} provide data abstractions targeted towards specific classes of solvers.  These libraries provide templates that allow developers to assemble sparse matrices without having to address the structural complexities that a specific format may present.  These matrices can then be used in a variety of solvers, given that the format is supported.
 
-A compiler locks you in to languages that it supports.
-Compiler may only target specific types of operations.
+Alternatively, there is a body of research that takes the approach of designing and building compilers capable of automatically making decisions about sparse matrix formats and operations.  Some compilers~\cite{bik1995, bik1996} allow developers to work with dense matrices in code, generating a sparse matrix program at compile time.  Others~\cite{kotlyar1997} aim to provide the compiler with an abstract description of a sparse format, allowing it to make automatic optimizations in code that accesses the sparse data.
 
-Existing software may have the following issues:
-* Written in imperative langauges like C and Fortran
-* Structure of sparse format interspersed with computation
-* Logical steps of construction interspersed with computation
+Rather than hiding the complexities of sparse matrix formats by providing data abstractions in code or automatic optimizations in compilers, we propose an approach that allows developers to reason about these complexities.  Elements of this approach include declarative modeling and automatic, push-button analysis using the Alloy Analyzer~\cite{jackson2012}, a lightweight bounded model checking tool.  Characteristics of sparse matrices, with their numerous representations and ...hard-to-get-right-implementation-details... are approached using abstraction based methods~\cite{clarke1994}, including data abstraction~\cite{dingel1995} and predicate abstraction~\cite{graf1997}, data and functional refinement~\cite{woodcock1996}, and other techniques, manually, as part of a modeling process...
 
-Developers may want to change sparse format to use a different solver.
-ADCIRC uses ITPACKV - ELL format.
-We want to try out ITPACK and Pardiso - Yale format.
+The benefits of this approach lie in its generality.  By using Alloy to perform the modeling and analysis, the modeler may choose the programming language that best fits their needs when transitioning from model to implementation.
+Can reason about existing software.
+Can reason about design of new sparse matrix libraries.
+Can reason about compiler design.
 
-Need to separate the structure complexities in the existing code in order to reason about the sparse matrix format change:
-* Current implementation has data access littered throughout thousands of lines of code.
-* Matrix updates across parallel nodes also interspersed.
-* How will a change in sparse format change these data accesses?
+\section{Lightweight Formal Methods}
 
-Major issue in going from ELL to Yale:
-* ELL format never changes array sizes, Yale format does during wetting and drying.
-* Parallel Yale format? Must work with solver...
+An additional aspect of lightweight formal methods is an incremental style of modeling, which tools like Alloy support by offering immediate feedback while models are being constructed: we start with a minimal set of constraints and ``grow'' them via conjunction.
+
+\subsection{Alloy}
+
+The tool used in this research is Alloy, a declarative modeling language combining first-order logic with relational calculus and associated quantifiers and operators, along with transitive closure.  It offers rich data modeling features based on class-like structures and an automatic form of analysis that is performed within a bounded scope using a SAT solver.  For \emph{simulation}, the analyzer can be directed to look for instances satisfying a property of interest.  For \emph{checking}, it looks for an instance violating an assertion: a counterexample.  The approach is \emph{scope complete} in the sense that all cases are checked within user-specified bounds.  Alloy's logic supports three distinct styles of expression, that of predicate calculus, navigation expressions, and relational calculus.  The language used for modeling is also used for specifying properties of interest and assertions.  Alloy supports expressions with integer values and basic arithmetic operations.
+
+\subsection{Data Abstraction}
+
+Proof obligations: mathematical formula to be proven in order to ensure that a component is correct.
+
+Start example here.
+
+\subsection{Data Refinement}
+
+The process of data refinement involves removing nondeterminism, or uncertainty, from an abstract model~\cite{woodcock1996}.  While an abstract model may omit certain design choices, a refinement can resolve some of these choices, removing uncertainty and approaching the level of a concrete implementation.
+
+Diagram of refinement here.
+
+Abstraction function and representation invariant discussion.
+
+Continue example with refinement here.
+
+\section{Sparse Matrix Models}
+
+In this section we describe four models of sparse matrices.  First we describe an abstract model of a sparse matrix that refrains from including any implementation specific details; it does not directly describe any specific sparse matrix format.  Then we describe three refinements of this model: the first is a model of the DOK format, the second is a model of the ELL format, and the third is a model of the CSR format.  In each of these refinements we determine the appropriate representation invariants as well as the abstraction functions and show that the refinement is valid.
+
+\subsection{Abstract Sparse Matrix}
+
+\begin{figure}
+\centering
+Value Model.
+\caption{Abstract Model of Values}
+\label{mod:value}
+\end{figure}
+
+Before modeling sparse matrices, we first create an abstraction of the values that they contain, as shown in \figurename~\ref{mod:value}.  Because the distinction that separates sparse matrices from dense ones is the removal of zeros, we represent values as either zero or non-zero.  The Value signature represents any numerical value and the Zero signature, and extension of Value, represents the value zero.  So depending on the scope, the set of values available is
+
+\begin{displaymath}
+Value = \{Zero, Value_0, Value_1, \ldots, Value_n\}
+\end{displaymath}
+
+An abstract model of a sparse matrix is given in \figurename~\ref{mod:abstract}.
+
+\begin{figure}
+\centering
+Abstract Model.
+\caption{Abstract Sparse Matrix Model.}
+\label{mod:abstract}
+\end{figure}
+
+\subsection{DOK Format}
+
+DOK.
+
+\subsection{ELL Format}
+
+ELL.
+
+\subsection{CSR Format}
+
+CSR.
+
+\bibliographystyle{IEEEtran}
+\bibliography{IEEEabrv,sparse,mybib}
 
 \end{document}
