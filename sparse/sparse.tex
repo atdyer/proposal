@@ -45,8 +45,6 @@ The tool used in our approach is Alloy, a declarative modeling language combinin
 
 \subsection{Data Abstraction}
 
-
-
 Proof obligations: mathematical formula to be proven in order to ensure that a component is correct.
 
 Start example here.
@@ -89,6 +87,8 @@ Value = \{Zero, Value_0, Value_1, \ldots, Value_n\}
 %\label{mod:abstract}
 %\end{figure}
 
+The representation invariant:
+
 \begin{itemize}
 	\item Number of rows and columns greather than or equal to zero
 	\item All index values fall within bounds
@@ -100,7 +100,22 @@ Value = \{Zero, Value_0, Value_1, \ldots, Value_n\}
 
 The dictionary of keys (DOK) format makes use of dictionaries, or associative arrays, to store key, value pairs.  Sparse matrices are stored such that pairs of row, column indices are used as keys to reference stored values.  The DOK format is frequently used~\cite{scipy, eigenweb2010} in the assembly of sparse matrices because of the efficient \(\mathcal{O}(1)\) access to individual elements provided by the associative array format.  However, because associative arrays make no guarantees about memory locality, iterating over all values in the matrix can be inefficient.  As a result, it is common to use this format to incrementally assemble the full matrix and convert it to another sparse matrix format that allows for more efficient operations on matrices.
 
+Why model the DOK format?  It's frequently used.  The model is fairly simple and gives us an idea for the nature of the abstraction functions. 
+
+The abstraction function:
+
 \begin{itemize}
+  \item \(nrows\) equal to number of rows in matrix
+  \item \(ncols\) equal to number of columns in matrix
+  \item All \((i, j), v\) key, value pairs map to corresponding values in the matrix
+  \item All \((i, j)\) pairs \emph{not} in DOK map to zeros in the matrix
+\end{itemize}
+
+The representation invariant:
+
+\begin{itemize}
+  \item The integer value \(nrows \geq 0\)
+  \item The integer value \(ncols \geq 0\)
 	\item There are no zeros stored as values
 	\item All row, column pairs fall within bounds
 	\item All row, column pairs may appear only once
@@ -114,7 +129,24 @@ ELL.
 
 CSR.
 
+Need to describe the ``get'' predicate and why it is needed.
+
+The abstraction function:
+
 \begin{itemize}
+  \item \(nrows\) equal to number of rows in matrix
+  \item \(ncols\) equal to number of columns in matrix
+  \item For all integers \(i \in [0, nrows)\) and \(j \in [0, ncols)\):
+  \begin{itemize}
+    \item The value of the ``get'' predicate at \((i, j)\) is equal to the value at location \((i, j)\) in the matrix.
+  \end{itemize}
+\end{itemize}
+
+The representation invariant:
+
+\begin{itemize}
+  \item The integer value \(nrows \geq 0\)
+  \item The integer value \(ncols \geq 0\)
 	\item There are no zeros stored as values
 	\item All values in IA \(\leq nrows \times ncols\)
 	\item All values in JA \(< ncols\)
