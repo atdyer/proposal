@@ -21,11 +21,11 @@
 
 Computations on sparse matrices are prevalent in scientific and engineering software.  Sparse matrix data formats are able to compress large matrices with a small number of non-zero elements into a more efficient representation.  The development of software that makes use of sparse matrices is a tedious and often error-prone task because of the myriad data formats and complexities involved in tuning the operations on these formats to achieve an efficient implementation.
 
-Characterize sparse matrix codes. Written in imperative languages like C and Fortran.  Structure of sparse format interspersed with computation.  
+Characterize sparse matrix codes...written in imperative languages like C and Fortran...structure of sparse format interspersed with computation.  
 
 A number of approaches have been taken in order to address these issues.  Object-oriented libraries such as PETSc~\cite{petsc2019} and Eigen~\cite{eigenweb2010} provide data abstractions targeted towards specific classes of solvers.  These libraries provide templates that allow developers to assemble sparse matrices without having to address the structural complexities that a specific format may present.  These matrices can then be used in a variety of solvers, given that the format is supported.
 
-Alternatively, there is a body of research that takes the approach of designing and building compilers capable of automatically making decisions about sparse matrix formats and operations.  Some compilers~\cite{bik1995, bik1996} allow developers to work with dense matrices in code, generating a sparse matrix program at compile time.  Others~\cite{kotlyar1997} aim to provide the compiler with an abstract description of a sparse format, allowing it to make automatic optimizations in code that accesses the sparse data.
+Alternatively, there is a body of research that takes the approach of designing and building compilers capable of automatically making decisions about sparse matrix formats and operations.  Some compilers~\cite{bik1995, bik1996} allow developers to work with dense matrices in code, generating a sparse matrix program at compile time.  Others~\cite{kotlyar1997} allow the user to provide the compiler with an abstract description of a sparse format, from which the compiler can make automatic optimizations in code that accesses the sparse data.
 
 Rather than hiding the complexities of sparse matrix formats by providing data abstractions in code or automatic optimizations in compilers, we propose an approach that allows developers to reason about these complexities.  Elements of this approach include declarative modeling and automatic, push-button analysis using the Alloy Analyzer~\cite{jackson2012}, a lightweight bounded model checking tool.  Characteristics of sparse matrices, with their numerous representations and ...hard-to-get-right-implementation-details... are approached using abstraction based methods~\cite{clarke1994}, including data abstraction~\cite{dingel1995} and predicate abstraction~\cite{graf1997}, data and functional refinement~\cite{woodcock1996}, and other techniques, manually, as part of a modeling process...
 
@@ -36,13 +36,16 @@ Can reason about compiler design.
 
 \section{Lightweight Formal Methods}
 
+...
 An additional aspect of lightweight formal methods is an incremental style of modeling, which tools like Alloy support by offering immediate feedback while models are being constructed: we start with a minimal set of constraints and ``grow'' them via conjunction.
 
 \subsection{Alloy}
 
-The tool used in this research is Alloy, a declarative modeling language combining first-order logic with relational calculus and associated quantifiers and operators, along with transitive closure.  It offers rich data modeling features based on class-like structures and an automatic form of analysis that is performed within a bounded scope using a SAT solver.  For \emph{simulation}, the analyzer can be directed to look for instances satisfying a property of interest.  For \emph{checking}, it looks for an instance violating an assertion: a counterexample.  The approach is \emph{scope complete} in the sense that all cases are checked within user-specified bounds.  Alloy's logic supports three distinct styles of expression, that of predicate calculus, navigation expressions, and relational calculus.  The language used for modeling is also used for specifying properties of interest and assertions.  Alloy supports expressions with integer values and basic arithmetic operations.
+The tool used in our approach is Alloy, a declarative modeling language combining first-order logic with relational calculus and associated quantifiers and operators, along with transitive closure.  It offers rich data modeling features based on class-like structures and an automatic form of analysis that is performed within a bounded scope using a SAT solver.  For \emph{simulation}, the analyzer can be directed to look for instances satisfying a property of interest.  For \emph{checking}, it looks for an instance violating an assertion: a counterexample.  The approach is \emph{scope complete} in the sense that all cases are checked within user-specified bounds.  Alloy's logic supports three distinct styles of expression, that of predicate calculus, navigation expressions, and relational calculus.  The language used for modeling is also used for specifying properties of interest and assertions.  Alloy supports expressions with integer values and basic arithmetic operations.
 
 \subsection{Data Abstraction}
+
+
 
 Proof obligations: mathematical formula to be proven in order to ensure that a component is correct.
 
@@ -60,7 +63,7 @@ Continue example with refinement here.
 
 \section{Sparse Matrix Models}
 
-In this section we describe four models of sparse matrices.  First we describe an abstract model of a sparse matrix that refrains from including any implementation specific details; it does not directly describe any specific sparse matrix format.  Then we describe three refinements of this model: the first is a model of the DOK format, the second is a model of the ELL format, and the third is a model of the CSR format.  In each of these refinements we determine the appropriate representation invariants as well as the abstraction functions and show that the refinement is valid.
+In this section we describe four models.  First we describe an abstract model of a matrix that does not represent any specific data format, leaving out all implementation details and notions of sparsity. Then we describe three refinements of this model that introduce structure that supports a sparse representation: the DOK format, the ELL format, and the CSR format.  In each of these refinements we determine the appropriate representation invariants as well as the abstraction functions and show that the refinement is valid.
 
 \subsection{Abstract Sparse Matrix}
 
@@ -71,24 +74,37 @@ Value Model.
 \label{mod:value}
 \end{figure}
 
-Before modeling sparse matrices, we first create an abstraction of the values that they contain, as shown in \figurename~\ref{mod:value}.  Because the distinction that separates sparse matrices from dense ones is the removal of zeros, we represent values as either zero or non-zero.  The Value signature represents any numerical value and the Zero signature, and extension of Value, represents the value zero.  So depending on the scope, the set of values available is
+By design, Alloy provides no means of working with floating point values.  It includes integers, but in a limited scope, and so they are not useful when attempting to work with the complete integer set, as might be the case when considering values that could be stored in a sparse matrix.  This is inconsequential, however, as we only aim to reason about the structural complexities of sparse matrix formats.  Therefore, it is sufficient to create an abstract distinction between zero and non-zero values.  The model in \figurename~\ref{mod:value} contains a Value signature, representing any numerical value.  The Zero signature, an extension of Value, represents the value zero.  Depending on the scope, this creates an abstract set of ``values'' that we can use to populate matrices in our models.
 
 \begin{displaymath}
 Value = \{Zero, Value_0, Value_1, \ldots, Value_n\}
 \end{displaymath}
 
-An abstract model of a sparse matrix is given in \figurename~\ref{mod:abstract}.
+%An abstract model of a matrix is given in \figurename~\ref{mod:abstract}.
 
-\begin{figure}
-\centering
-Abstract Model.
-\caption{Abstract Sparse Matrix Model.}
-\label{mod:abstract}
-\end{figure}
+%\begin{figure}
+%\centering
+%Abstract Model.
+%\caption{Abstract Matrix Model.}
+%\label{mod:abstract}
+%\end{figure}
+
+\begin{itemize}
+	\item Number of rows and columns greather than or equal to zero
+	\item All index values fall within bounds
+	\item Total number of values in the matrix is \(nrows \times ncols\)
+	\item Every \(i, j\) index pair appears in the matrix
+\end{itemize}
 
 \subsection{DOK Format}
 
-DOK.
+The dictionary of keys (DOK) format makes use of dictionaries, or associative arrays, to store key, value pairs.  Sparse matrices are stored such that pairs of row, column indices are used as keys to reference stored values.  The DOK format is frequently used~\cite{scipy, eigenweb2010} in the assembly of sparse matrices because of the efficient \(\mathcal{O}(1)\) access to individual elements provided by the associative array format.  However, because associative arrays make no guarantees about memory locality, iterating over all values in the matrix can be inefficient.  As a result, it is common to use this format to incrementally assemble the full matrix and convert it to another sparse matrix format that allows for more efficient operations on matrices.
+
+\begin{itemize}
+	\item There are no zeros stored as values
+	\item All row, column pairs fall within bounds
+	\item All row, column pairs may appear only once
+\end{itemize}
 
 \subsection{ELL Format}
 
@@ -97,6 +113,21 @@ ELL.
 \subsection{CSR Format}
 
 CSR.
+
+\begin{itemize}
+	\item There are no zeros stored as values
+	\item All values in IA \(\leq nrows \times ncols\)
+	\item All values in JA \(< ncols\)
+	\item The first value in IA is zero
+	\item The last value in IA is the length of A
+	\item The last value of IA is not repeated
+	\item A and JA are the same length
+	\item The max length of A is \(nrows \times ncols\)
+	\item The max length of IA is \(nrows + 1\)
+	\item The values in IA are monotonically increasing
+	\item The difference between any two consecutive values in IA must be \(\leq ncols\)
+	\item Values in JA must be unique per row
+\end{itemize}
 
 \bibliographystyle{IEEEtran}
 \bibliography{IEEEabrv,sparse,mybib}
