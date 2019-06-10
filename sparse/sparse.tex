@@ -24,6 +24,8 @@ Sparse matrix data formats are able to compress large matrices with a small numb
 %The development of software that makes use of sparse matrices is a tedious and often error-prone task because of the myriad data formats and complexities involved in tuning the operations on these formats to achieve an efficient implementation.
 Scientific and engineering software that make use of sparse matrix formats are often implemented in low-level imperative languages such as C++ and Fortran.  The optimized nature of these software often means that the structural organization of sparse matrix formats and mathematical computations are heavily intertwined.  Additionally, the myriad data formats and complexities involved in tuning the operations on these formats to achieve efficient implementations means that the development of software that makes use of sparse matrices is a tedious and often error-prone task.
 
+Need to add something about how verification of sparse matrix codes is also difficult, and has only really been done by Arnold. 
+
 A number of approaches have been taken in order to address these issues.  Object-oriented libraries such as PETSc~\cite{petsc2019} and Eigen~\cite{eigenweb2010} provide data abstractions targeted towards specific classes of solvers.  These libraries provide templates that allow developers to assemble sparse matrices without having to address the structural complexities that a specific format may present.  These matrices can then be used in a variety of solvers, given that the format is supported.
 
 Alternatively, there is a body of research that takes the approach of designing and building compilers capable of automatically making decisions about sparse matrix formats and operations.  Some compilers~\cite{bik1995, bik1996} allow developers to work with dense matrices in code, generating a sparse matrix program at compile time.  Others~\cite{kotlyar1997} allow the user to provide the compiler with an abstract description of a sparse format, from which the compiler can make automatic optimizations in code that accesses the sparse data.
@@ -36,6 +38,14 @@ The benefits of this approach lie in its generality.  By using Alloy to perform 
 Can reason about existing software.
 Can reason about design of new sparse matrix libraries.
 Can reason about compiler design.
+
+\section{Related Work}
+
+Libraries.
+Compilers.
+Specifying sparse matrix code.
+Verifying sparse matrix code.
+Higher order verification.
 
 \section{Lightweight Formal Methods}
 
@@ -66,44 +76,39 @@ Continue example with refinement here.
 
 In this section we describe four models.  First we describe an abstract model of a matrix that does not represent any specific data format, leaving out all implementation details and notions of sparsity. Then we describe three refinements of this model that introduce structure that supports a sparse representation: the DOK format, the ELL format, and the CSR format.  In each of these refinements we determine the appropriate representation invariants as well as the abstraction functions and show that the refinement is valid.
 
-\subsection{Abstract Sparse Matrix}
-
-\begin{figure}
-\centering
-Value Model.
-\caption{Abstract Model of Values}
-\label{mod:value}
-\end{figure}
-
-By design, Alloy provides no means of working with floating point values.  It includes integers, but in a limited scope, and so they are not useful when attempting to work with the complete integer set, as might be the case when considering values that could be stored in a sparse matrix.  This is inconsequential, however, as we only aim to reason about the structural complexities of sparse matrix formats.  Therefore, it is sufficient to create an abstract distinction between zero and non-zero values.  The model in \figurename~\ref{mod:value} contains a Value signature, representing any numerical value.  The Zero signature, an extension of Value, represents the value zero.  Depending on the scope, this creates an abstract set of ``values'' that we can use to populate matrices in our models.
+By design, Alloy provides no means of working with floating point values.  It includes integers, but in a limited scope, and so they are not useful when attempting to work with the complete integer set, as might be the case when considering values that could be stored in a sparse matrix.  This is inconsequential, however, as we only aim to reason about the structural complexities of sparse matrix formats.  Therefore, it is sufficient to create an abstract distinction between zero and non-zero values.  Our models employ a Value signature, representing any numerical value, and a Zero signature, an extension of Value, that represents the value zero.  Depending on the scope, this creates an abstract set of ``values'' that we can use to populate matrices in our models.
 
 \begin{displaymath}
 Value = \{Zero, Value_0, Value_1, \ldots, Value_n\}
 \end{displaymath}
 
-%An abstract model of a matrix is given in \figurename~\ref{mod:abstract}.
+\subsection{Abstract Sparse Matrix}
 
-%\begin{figure}
-%\centering
-%Abstract Model.
-%\caption{Abstract Matrix Model.}
-%\label{mod:abstract}
-%\end{figure}
+Our abstract model of a matrix, sparse or otherwise, is defined by the Matrix signature, shown in \figurename~\ref{model:abstract}.  There are three relations defined on the Matrix signature representing (1) the number of rows in the matrix, (2) the number of columns in the matrix, and (3) the values and their locations in the matrix.
 
-The representation invariant:
+\begin{figure}
+\centering
+Abstract Model.
+\caption{Abstract Matrix Model.}
+\label{model:abstract}
+\end{figure}
+
+To limit the set of matrices considered by Alloy to those that are well-formed, we create a representation invariant with the following conditions. 
 
 \begin{itemize}
-	\item Number of rows and columns greather than or equal to zero
+	\item The number of rows and columns are each greather than or equal to zero
 	\item All index values fall within bounds
-	\item Total number of values in the matrix is \(nrows \times ncols\)
+	\item The total number of values in the matrix is \(nrows \times ncols\)
 	\item Every \(i, j\) index pair appears in the matrix
 \end{itemize}
+
+This completes our abstract model of a matrix.  It can be used to represent any two-dimensional matrix that contains values.  Being our highest level of abstraction, it makes no assertions about what values may be included in the matrix or how those values must be stored.
+
+Show an instance here, using visualizations from Alloy Instances preferably.
 
 \subsection{DOK Format}
 
 The dictionary of keys (DOK) format makes use of dictionaries, or associative arrays, to store key, value pairs.  Sparse matrices are stored such that pairs of row, column indices are used as keys to reference stored values.  The DOK format is frequently used~\cite{scipy, eigenweb2010} in the assembly of sparse matrices because of the efficient \(\mathcal{O}(1)\) access to individual elements provided by the associative array format.  However, because associative arrays make no guarantees about memory locality, iterating over all values in the matrix can be inefficient.  As a result, it is common to use this format to incrementally assemble the full matrix and convert it to another sparse matrix format that allows for more efficient operations on matrices.
-
-Why model the DOK format?  It's frequently used.  The model is fairly simple and gives us an idea for the nature of the abstraction functions. 
 
 The abstraction function:
 
@@ -119,9 +124,9 @@ The representation invariant:
 \begin{itemize}
   \item The integer value \(nrows \geq 0\)
   \item The integer value \(ncols \geq 0\)
-	\item There are no zeros stored as values
-	\item All row, column pairs fall within bounds
-	\item All row, column pairs may appear only once
+  \item There are no zeros stored as values
+  \item All row, column pairs fall within bounds
+  \item All row, column pairs may appear only once
 \end{itemize}
 
 \subsection{ELL Format}
