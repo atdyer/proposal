@@ -48,6 +48,8 @@ Sparse matrix formats are typically implemented with low-level imperative progra
 
 **Notes.**
 
+The research gap they aim to fill is the verification of sparse matrix formats. This is often difficult because the optimized nature of low-level implementations often hides the structural organization of the format. They make verification of sparse matrix formats easier by creating a language for describing sparse matrix formats as a pipline-style composition of smaller construction steps.
+
 The authors design a little language (LL) for describing sparse matrix codes and show how that language can be used to describe a number of formats.
 
 The authors describe a proof method for automatic verification of sparse matrix codes written in LL.
@@ -76,6 +78,8 @@ We present a relational algebra based framework for compiling efficient sparse m
 
 **Notes.**
 
+Research gap: development of high-performance software is tedious and error-prone. Writing libraries requires lots of code to cover lots of formats. Common to give a compiler dense matrices, but they give it sparse matrix format descriptions. 
+
 The authors point out that rather than explicitly using sparse matrix formats, it is common to give the compiler a dense matrix program and allow the compiler to decide how and when to user sparse matrices instead. Their approach however, is to generate sparse matrices given user-defined storage formats. This is accomplished by describing formats as relations and the execution of loops nests as evaluation of relational queries.
 
 Their abstractions are essentially the same that we use: Matrices and vectors are modeled as relations that hold indices and values.
@@ -91,6 +95,15 @@ Venkat et al.
 **Abstract**
 
 This paper introduces three new compiler transformations for representing and transforming sparse matrix computations and their data representations. In cooperation with run-time inspection, our compiler derives transformed matrix representations and associated transformed code to implement a variety of representations targeting different architecture platforms. This systematic approach to combining code and data transformations on sparse computations, which extends a polyhedral transformation and code generation framework, permits the compiler to compose these transformations with other transformations to generate code that is on average within 5% and often exceeds manually-tuned, high-performance sparse matrix libraries CUSP and OSKI. Additionally, the compiler-generated inspector codes are on average 1.5 faster than OSKI and perform comparably to CUSP, respectively.
+
+**Notes.**
+
+Research gap: new architectures are leading to new sparse matrix formats that are tailored to these architectures in order to have good performance. Common approach to using these new formats is to provide a library that converts from a common format to new format, but this approach has a few weaknesses:
+* dozens of representations with new ones being developed, and all formats must be optimized
+* libraries must be manually ported to new architectures
+* libraries encapsulate individual functions that cannot be composed in an application (e.g. only performing a single sparse matrix-vector multiply or computation of similar scope)
+
+They try to fill this gap by providing new compiler transformations and automatically generated run-time inspectors.
 
 ### Model-Driven Engineering and Optimizing Compilers: A Bridge Too Far?
 
