@@ -8,6 +8,7 @@
 \usetikzlibrary{matrix, fit}
 \usetikzlibrary{backgrounds}
 \usetikzlibrary{positioning}
+\usetikzlibrary{cd}
 
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
@@ -107,7 +108,15 @@ Start example here.
 
 The process of data refinement involves removing nondeterminism, or uncertainty, from an abstract model~\cite{woodcock1996}.  While an abstract model may omit certain design choices, a refinement can resolve some of these choices, removing uncertainty and approaching the level of a concrete implementation.
 
-Diagram of refinement here.
+\begin{figure}
+\begin{tikzpicture}
+\begin{tikzcd}[sep=huge]
+AS \arrow{r}[description]{AF} & AS' \\
+IS \arrow{u}[description]{\alpha} \arrow{r}[description]{IF} & IS' \arrow{u}[description]{\alpha}
+\end{tikzcd}
+\end{tikzpicture}
+\caption{TODO: An abstract state (AS) becomes new abstract state (AS') through an abstract function (AF).  An implemented state (IS) becomes a new implemented state (IS') through an implemented function (IF).  The implemented states are related to the abstract states through the abstraction function $\alpha$.}
+\end{figure}
 
 Abstraction function and representation invariant discussion.
 
@@ -140,7 +149,7 @@ Throughout these models we make use of predicate overloading to define various p
 \Bpred colInRange[c: CSR, col: Int] \{\ldots\}\\
 }}
 \end{myquote}
-\caption{Predicate overloading of \texttt{rowInRange} and \texttt{colInRange}}.
+\caption{Predicate overloading of \texttt{rowInRange} and \texttt{colInRange}.}
 \label{fig:overload}
 \end{figure}
 
@@ -167,7 +176,7 @@ We begin with an abstract model of a two-dimensional mathematical matrix, sparse
 \}
 }}
 \end{myquote}
-\caption{Abstract Matrix Model.}
+\caption{The abstract matrix model.}
 \label{model:abstract}
 \end{figure}
 
@@ -186,9 +195,13 @@ The representation invariant is specified as a signature fact so that it is appl
 \}
 }}
 \end{myquote}
+\caption{The abstract matrix initialization.}
+\label{init:abstract}
 \end{figure}
 
-\subsubsection{Matrix Updates}
+The \texttt{init} predicate shown in \figurename~\ref{init:abstract} is used to initialize an empty matrix.  We consider the initialized state of a matrix to be one in which the number of rows and columns is defined and all values are zero.
+
+\subsubsection{Matrix Update}
 
 \begin{figure}
 \centering
@@ -203,14 +216,16 @@ The representation invariant is specified as a signature fact so that it is appl
 \TA \Blet curr = m.values[row][col] |\\
 \TB m'.values =\\
 \TC m.values\\
-\TC - row->col->curr\\
-\TC + row->col->val\\
+\TC - row$\rightarrow$col$\rightarrow$curr\\
+\TC + row$\rightarrow$col$\rightarrow$val\\
 \}
 }}
 \end{myquote}
-\caption{Abstract matrix update.}
+\caption{The abstract matrix update.}
 \label{update:abstract}
 \end{figure}
+
+The \texttt{update} predicate shown in \figurename~\ref{update:abstract} is used to perform an update.  We consider a matrix update to be a transition in which a single value of a matrix is changed.  For all matrices, this includes four possible transitions: non-zero to non-zero, non-zero to zero, zero to non-zero, and zero to zero, or stutter.
 
 \subsection{DOK Format}
 
@@ -227,7 +242,7 @@ The DOK signature, shown in \figurename~\ref{model:dok}, resembles the Matrix si
 \}
 }}
 \end{myquote}
-\caption{DOK Model.}
+\caption{The DOK Model.}
 \label{model:dok}
 \end{figure}
 
@@ -251,7 +266,7 @@ The representation invariant for the DOK format, shown in \figurename~\ref{model
 \}\\
 }}
 \end{myquote}
-\caption{DOK Representation Invariant.}
+\caption{The DOK representation invariant.}
 \label{model:dokrep}
 \end{figure}
 
@@ -263,14 +278,39 @@ The representation invariant for the DOK format, shown in \figurename~\ref{model
 %   \item All row, column pairs may appear only once
 % \end{itemize}
 
-The abstraction function:
+The abstraction function provides a mapping from the DOK representation of a matrix to our abstract representation of a matrix.  The \texttt{alpha} predicate, shown in \figurename~\ref{alpha:dok}, states that the DOK matrix $d$ is a refinement of Matrix $m$ if (1) $d$ has the same number of rows and columns as $m$, (2) all row, column index pairs that map to a value in the $d$ dictionary map to the same value at the same location in $m$, and (3) all in-range row, column pairs \emph{not} used as keys in the $d$ dictionary map to zeros in $m$.
 
-\begin{itemize}
-  \item \(nrows\) equal to number of rows in matrix
-  \item \(ncols\) equal to number of columns in matrix
-  \item All \((i, j), v\) key, value pairs map to corresponding values in the matrix
-  \item All \((i, j)\) pairs \emph{not} in DOK map to zeros in the matrix
-\end{itemize}
+\begin{figure}
+\centering
+\begin{myquote}\small{\texttt{\\
+\Bpred alpha [d: DOK, m: Matrix] \{\\
+\TA m.rows = d.rows\\
+\TA m.cols = d.cols\\
+\TA \Ball i, j: \Bint, v: Value |\\
+\TB i$\rightarrow$j$\rightarrow$v \Bin d.dict \Bimplies\\
+\TC i$\rightarrow$j$\rightarrow$v \Bin m.values\\
+\TA \Ball i, j: Int |\\
+\TB rowInRange[d, i] and\\
+\TB colInRange[d, j] and\\
+\TB i$\rightarrow$j not in d.dict.\Buniv~\Bimplies\\
+\TC i$\rightarrow$j$\rightarrow$Zero \Bin m.values\\
+\}
+}}
+\end{myquote}
+\caption{The DOK abstraction function}
+\label{alpha:dok}
+\end{figure}
+
+% \begin{itemize}
+%   \item \(nrows\) equal to number of rows in matrix
+%   \item \(ncols\) equal to number of columns in matrix
+%   \item All \((i, j), v\) key, value pairs map to corresponding values in the matrix
+%   \item All \((i, j)\) pairs \emph{not} in DOK map to zeros in the matrix
+% \end{itemize}
+
+\subsubsection{Matrix Initialization}
+
+\subsubsection{Matrix Update}
 
 \subsection{ELL Format}
 
