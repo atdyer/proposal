@@ -85,11 +85,22 @@ S.~Graf and H.~Sa{\"\i}di, ``Construction of abstract state graphs with
 J.~Woodcock, \emph{Using Z : specification, refinement, and proof}.\hskip 1em
   plus 0.5em minus 0.4em\relax London New York: Prentice Hall, 1996.
 
+\bibitem{arnold}
+G.~Arnold, J.~Hölzl, A.~Sinan~Köksal, R.~Bodik, and M.~Sagiv, ``Specifying
+  and verifying sparse matrix codes,'' \emph{ACM SIGPLAN Notices}, vol.~45, pp.
+  249--260, 09 2010.
+
 \bibitem{scipy}
 \BIBentryALTinterwordspacing
 E.~Jones, T.~Oliphant, P.~Peterson \emph{et~al.}, ``{SciPy}: Open source
   scientific tools for {Python},'' 2001--. [Online]. Available:
   \url{http://www.scipy.org/}
 \BIBentrySTDinterwordspacing
+
+\bibitem{bai}
+J.~Demmel, J.~Dongarra, A.~Ruhe, and H.~van~der Vorst, \emph{Templates for the
+  Solution of Algebraic Eigenvalue Problems: A Practical Guide}, Z.~Bai,
+  Ed.\hskip 1em plus 0.5em minus 0.4em\relax Philadelphia, PA, USA: Society for
+  Industrial and Applied Mathematics, 2000.
 
 \end{thebibliography}

@@ -19,6 +19,7 @@
 \def\TA{\makebox[12pt]{}}
 \def\TB{\makebox[24pt]{}}
 \def\TC{\makebox[36pt]{}}
+\def\TD{\makebox[48pt]{}}
 
 % boldface for Alloy keywords
 \def\Bopen{\textbf{open} }
@@ -44,6 +45,7 @@
 \def\Biff{\textbf{iff} }
 \def\Blet{\textbf{let} }
 \def\Bseq{\textbf{seq} }
+\def\Bint{\textbf{Int}}
 
 \begin{document}
 
@@ -80,11 +82,9 @@ Can reason about compiler design.
 
 \section{Related Work}
 
-Libraries.
-Compilers.
-Specifying sparse matrix code.
-Verifying sparse matrix code.
-Higher order verification.
+\textbf{Verifying sparse matrix code.}  Arnold et al.~\cite{arnold} design a functional language and proof method for the automatic verification of sparse matrix codes.  Their ``little language" (LL) can be used to specify sparse codes as functional programs in which computations are sequences of high-level transformations on lists.  These models are then automatically translated into Isabelle/HOL where they can be verified for full functional correctness.  The authors use this automated proof method to verify a number of sparse matrix formats and their sparse matrix-vector multiplication operations.  Their approach is purely functional, relying on typed $\lambda$-calculus and Isabelle libraries to perform proofs using Isabelle/HOL.  LL, a shallow embedding in Isabelle/HOL, provides simple, composable rules that can be used to fully describe a sparse matrix format, removing the burden of directly writing proofs.  In quantifying rule reuse, the authors find that ``on average, fewer than 19\% of rules used by a particular format are specific to this format, while over 66\% of these rules are used by at least three additional formats, a significant level of reuse.  Even of the rules needed for more complex formats (CSC and JAD), only up to a third are format-specific.''~\cite{arnold}  The method enables a significant amount of rule reuse, but does not entirely prevent one from having to write some amount of $\lambda$-calculus.  Filling in these gaps may prove difficult for those without a strong background in functional programming and theorem proving.  Our approach, on the other hand, may appeal to an audience of scientists and engineers, who are accustomed to working with models anyway, and with the kind of automatic, push-button analysis supported by Alloy, those who develop software can focus on modeling and design instead of theorem proving.
+
+Arnold approach does not support modeling of assembly of sparse matrices.  Relational approach in combination with state change allows us to model the assembly process as well as updates to matrix values.  Relational approach also allows for modeling of format conversions.
 
 \section{Lightweight Formal Methods}
 
@@ -125,46 +125,51 @@ Value = \{Zero, Value_0, Value_1, \ldots, Value_n\}
 
 What is the specification we are modeling?  2D matrix of numerical values: zero or more rows, zero or more columns, a numerical value at every row, column index location.
 
-Our abstract model of a matrix, sparse or otherwise, is defined by the Matrix signature, shown in \figurename~\ref{model:abstract}.  There are three fields defined on the Matrix signature representing (1) the number of rows in the matrix, (2) the number of columns in the matrix, and (3) the values and their locations in the matrix.
+Our abstract model of a two-dimensional matrix, sparse or otherwise, is defined by the Matrix signature, shown in \figurename~\ref{model:abstract}.  There are three fields defined on the Matrix signature representing (1) the number of rows in the matrix, (2) the number of columns in the matrix, and (3) the values and their locations in the matrix.
 
 \begin{figure}
 \centering
-\begin{myquote}
+\begin{myquote}\small{\texttt{\\
 \Bsig Matrix \{\\
-\TA  rows, cols: Int,\\
-\TA  values: Int $\rightarrow$ Int $\rightarrow$ Value\\
+\TA  nrows, ncols: \Bint,\\
+\TA  values: \Bint~$\rightarrow$~\Bint~$\rightarrow$~Value\\
+\} \{\\
+\TA nrows $\geq$ 0\\
+\TA ncols $\geq$ 0\\
+\TA \Ball i, j: \Bint~$|$\\
+\TB i $\rightarrow$ j \Bin values.univ \Bimplies\\
+\TC 0 $\leq$ i \Band i $<$ nrows \Band\\
+\TC 0 $\leq$ j \Band j $<$ ncols\\
+\TA \Blet nvals = mul[nrows, ncols] $|$\\
+\TB \#values = nvals \Band\\
+\TB \#values.univ = nvals\\
 \}
+}}
 \end{myquote}
 \caption{Abstract Matrix Model.}
 \label{model:abstract}
 \end{figure}
 
-This model alone is an underspecified representation of a matrix as it allows, e.g. negative values for the number of rows and columns.  We must include a representation invariant, defined as follows, in order to restrict the allowable set of objects to those that adhere to the specification of a two-dimensional matrix.
+The representation invariant is specified as a signature fact so that it is applied to every member of the Matrix signature.  The representation invariant states that (1) the number of rows and columns in a matrix are each greater than or equal to zero, (2) all row, column indices fall within bounds, (3) the total number of values in the matrix is $\texttt{rows}\times\texttt{cols}$, and (4) there is a value at every $\left(i, j\right)$ index pair.
 
-\begin{itemize}
-	\item The number of rows and columns are each greater than or equal to zero
-	\item All index values fall within bounds
-	\item The total number of values in the matrix is \(nrows \times ncols\)
-	\item Every \(i, j\) index pair appears in the matrix
-\end{itemize}
-
-This completes our abstract model of a matrix.  It can be used to represent any two-dimensional matrix that contains values.  Being our highest level of abstraction, it makes no assertions about what values may be included in the matrix or how those values must be stored.
+This model represents any two-dimensional matrix that contains values.  As it is our highest level of abstraction, it makes no assertions about what values may be included in the matrix or how those values must be stored.
 
 Show an instance here, using visualizations from Alloy Instances preferably.
 
 \subsection{DOK Format}
 
-The dictionary of keys (DOK) format makes use of dictionaries, or associative arrays, to store key, value pairs.  An associative array is a collection of key, value pairs in which each possible key may appear only once.  Sparse matrices are stored such that pairs of row, column indices are used as keys to reference stored values.  The DOK format is frequently used~\cite{scipy, eigenweb2010} in the assembly of sparse matrices because of the efficient \(\mathcal{O}(1)\) access to individual elements provided by the associative array format.  However, because associative arrays make no guarantees about memory locality, iterating over all values in the matrix can be inefficient.  As a result, it is common to use this format to incrementally assemble the full matrix and convert it to another sparse matrix format that allows for more efficient operations on matrices.
+The dictionary of keys (DOK) format uses a dictionary, or associative array, to store key, value pairs.  An associative array is a collection of key, value pairs in which each possible key may appear only once.  Sparse matrices are stored such that pairs of row, column indices are used as keys to reference stored values.  The DOK format is frequently used~\cite{scipy, eigenweb2010} in the assembly of sparse matrices because of the efficient \(\mathcal{O}(1)\) access to individual elements provided by the associative array format.  However, because associative arrays make no guarantees about memory locality, iterating over all values in the matrix can be inefficient.  As a result, it is common to use this format to incrementally assemble the full matrix and convert it to another sparse matrix format that allows for more efficient operations on matrices.
 
-The DOK signature is almost identical to the Matrix signature.  The \(rows\) field represents the integer number of rows in the matrix and the \(cols\) field represents the integer number of columns in the matrix.  The \(dict\) field represents the dictionary of key, value pairs.  It takes the same form as the values field of the Matrix signature, but the \(Int \to Int\) relation represents integer pairs used as keys in the dictionary.
+The DOK signature, shown in \figurename~\ref{model:dok}, resembles the Matrix signature.  The \texttt{nrows} field represents the integer number of rows in the matrix and the \texttt{ncols} field represents the integer number of columns in the matrix.  The \texttt{dict} field represents the dictionary of key, value pairs.  It takes the same form as the values field of the Matrix signature, but the \(\Bint \to \Bint\) relation represents integer pairs used as keys in the dictionary.
 
 \begin{figure}
 \centering
-\begin{myquote}
+\begin{myquote}\small{\texttt{\\
 \Bsig DOK \{\\
-\TA  rows, cols: Int,\\
-\TA  dict: Int $\rightarrow$ Int $\rightarrow$ Value\\
+\TA nrows, ncols: \Bint,\\
+\TA dict: \Bint~$\rightarrow$~\Bint~$\rightarrow$~Value\\
 \}
+}}
 \end{myquote}
 \caption{DOK Model.}
 \label{model:dok}
@@ -193,24 +198,14 @@ The abstraction function:
 
 ELL, coming soon.
 
-\subsection{Yale Format}
+\subsection{CSR Format}
 
-The Yale, or frequently, Compressed Sparse Row (CSR) format, uses three arrays to store a sparse matrix.  The array $IA$ stores indices into the other two arrays.  Each consecutive pair of indices in the $IA$ array represents the range of values in the other two arrays that store the data for a single row in the matrix.  So, for example, the first two values in the $IA$ array represent the range of values in the other two arrays that contain data for the first row of the matrix.  The $A$ array contains values while the $JA$ array contains the corresponding column in which each value of the $A$ array falls.
+The Compressed Sparse Row (CSR) format, shown in \figurename~\ref{image:csr}, uses three arrays to store a sparse matrix, one for values and two for integers.  The value array contains non-zero values of the matrix ordered as they are traversed in a row-wise fashion.  Column indices of each value are stored in a separate array, while a third array stores the location in the values array that starts each row.  We adopt the convention that the values array is named $\mathrm{A}$, the column array is named $\mathrm{JA}$, and the row index array is name $\mathrm{IA}$.
 
 \begin{figure}
 \centering
-% \begin{displaymath}
-%   \begin{pmatrix}
-%     4 & 0 & 0 & 0 \\
-%     0 & 8 & 15 & 0 \\
-%     0 & 0 & 16 & 0 \\
-%     23 & 0 & 0 & 42
-%   \end{pmatrix}
-% \end{displaymath}
 
 \begin{tikzpicture}
-
-% \end{tikzpicture}
 
 \begin{scope}[every node/.style={minimum size=0.75cm-2*\pgflinewidth, outer sep=0pt},scale=0.75]
 \draw (0,0) grid +(5,1);
@@ -242,9 +237,9 @@ The Yale, or frequently, Compressed Sparse Row (CSR) format, uses three arrays t
 \draw [thick,->] (3.5,0) to[out=-90, in=90] (4, -1.0);
 \draw [thick,->] (4.5,0) to[out=-90, in=90] (6, -1.0);
 
-\node[left = 0.25cm of ia] {IA (index ranges)};
-\node[left = 0.25cm of ja] {JA (columns)};
-\node[left = 0.25cm of a] {A (values)};
+\node[left = 0.25cm of ia] {$\mathrm{IA}$ (index ranges)};
+\node[left = 0.25cm of ja] {$\mathrm{JA}$ (columns)};
+\node[left = 0.25cm of a]  {$\mathrm{A}$ (values)};
 \end{scope}
 
 \matrix[
@@ -269,21 +264,23 @@ The Yale, or frequently, Compressed Sparse Row (CSR) format, uses three arrays t
 \end{scope} 
 
 \end{tikzpicture}
-\caption{Visual description of the Yale format.}
+\caption{The CSR format.}
+\label{image:csr}
 \end{figure}
 
-Description of where and why it is used... scientific software, good memory locality for sparse matrix-vector multiplication.
+The CSR format, making no assumptions about the sparsity structure of the matrix, is a general format capable of compressing any sparse matrix.  The storage savings for this approach is significant, requiring $2nnz+n+1$ storage locations\footnote{where $n$ is the number of rows, $m$ is the number of columns, and $nnz$ is the number of non-zero values} rather than $n \times m$.  Memory locality is improved for row access over the DOK format, but the indirect addressing steps can have an impact on performance~\cite{bai}.
 
 \begin{figure}
 \centering
-\begin{myquote}
-\Bsig Yale \{\\
-\TA  rows, cols: Int,\\
+\begin{myquote}\small{\texttt{\\
+\Bsig CSR \{\\
+\TA  nrows, ncols: \Bint,\\
 \TA  A: \Bseq Value,\\
-\TA  IA, JA: \Bseq Int,\\
+\TA  IA, JA: \Bseq \Bint,\\
 \}
+}}
 \end{myquote}
-\caption{Yale Model.}
+\caption{CSR Model.}
 \label{model:yale}
 \end{figure}
 
@@ -292,32 +289,61 @@ Need to describe the ``get'' predicate and why it is needed.
 The abstraction function:
 
 \begin{itemize}
-  \item \(nrows\) equal to number of rows in matrix
-  \item \(ncols\) equal to number of columns in matrix
-  \item For all integers \(i \in [0, nrows)\) and \(j \in [0, ncols)\):
-  \begin{itemize}
-    \item The value of the ``get'' predicate at \((i, j)\) is equal to the value at location \((i, j)\) in the matrix.
-  \end{itemize}
+  \item \texttt{nrows} equal to number of rows in matrix
+  \item \texttt{ncols} equal to number of columns in matrix
+  \item For all integers $i \in [0, \texttt{nrows})$ and $j \in [0, \texttt{ncols})$, the value of the ``get'' predicate at \((i, j)\) is equal to the value at location \((i, j)\) in the matrix.
 \end{itemize}
 
 The representation invariant:
 
-\begin{itemize}
-  \item The integer value \(nrows \geq 0\)
-  \item The integer value \(ncols \geq 0\)
-	\item There are no zeros stored as values
-	\item All values in IA \(\leq nrows \times ncols\)
-	\item All values in JA \(< ncols\)
-	\item The first value in IA is zero
-	\item The last value in IA is the length of A
-	\item The last value of IA is not repeated
-	\item A and JA are the same length
-	\item The max length of A is \(nrows \times ncols\)
-	\item The max length of IA is \(nrows + 1\)
-	\item The values in IA are monotonically increasing
-	\item The difference between any two consecutive values in IA must be \(\leq ncols\)
-	\item Values in JA must be unique per row
-\end{itemize}
+\begin{figure}
+\centering
+\begin{myquote}\small{\texttt{\\
+\Bpred repInv [y: Yale] \{\\
+\TA Zero \Bnot \Bin y.A.elems\\
+\TA \Ball i: y.IA.rest.elems |\\
+\TB gte[i, 0] \Band\\
+\TB lte[i, mul[y.rows, y.cols]]\\
+\TA \Ball j: y.JA.elems |\\
+\TB gte[j, 0] \Band\\
+\TB lt[j, y.cols]\\
+\TA y.IA[0] = 0\\
+\TA y.IA.last = \#y.A\\
+\TA \#y.IA $>$ 1 \Bimplies\\
+\TC gt[y.IA.last, y.IA.butlast.last]\\
+\TA \#y.A = \#y.JA\\
+\TA lte[\#y.A, mul[y.rows, y.cols]]\\
+\TA lte[\#y.IA, add[y.rows, 1]]\\
+\TA \Ball i: y.IA.inds |\\
+\TB i > 0 \Bimplies\\
+\TC \Blet a = y.IA[sub[i, 1]],\\
+\TC       b = y.IA[i],\\
+\TC       n = sub[b, a] \{\\
+\TD   b $\geq$ a\\
+\TD   n $\leq$ y.cols\\
+\TD   n = \#y.JA.subseq[a, sub[b, 1]].elems\\
+\TC \}\\
+\}
+}}
+\end{myquote}
+\end{figure}
+
+% \begin{itemize}
+%   \item The integer value \(nrows \geq 0\)
+%   \item The integer value \(ncols \geq 0\)
+% 	\item There are no zeros stored as values
+% 	\item All values in IA \(\leq nrows \times ncols\)
+% 	\item All values in JA \(< ncols\)
+% 	\item The first value in IA is zero
+% 	\item The last value in IA is the length of A
+% 	\item The last value of IA is not repeated
+% 	\item A and JA are the same length
+% 	\item The max length of A is \(nrows \times ncols\)
+% 	\item The max length of IA is \(nrows + 1\)
+% 	\item The values in IA are monotonically increasing
+% 	\item The difference between any two consecutive values in IA must be \(\leq ncols\)
+% 	\item Values in JA must be unique per row
+% \end{itemize}
 
 \bibliographystyle{IEEEtran}
 \bibliography{IEEEabrv,sparse,mybib}
