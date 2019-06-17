@@ -46,6 +46,8 @@
 \def\Blet{\textbf{let} }
 \def\Bseq{\textbf{seq} }
 \def\Bint{\textbf{Int}}
+\def\Buniv{\textbf{univ}}
+\def\Blone{\textbf{lone} }
 
 \begin{document}
 
@@ -113,19 +115,38 @@ Continue example with refinement here.
 
 \section{Sparse Matrix Models}
 
-In this section we describe four models.  First we describe an abstract model of a matrix that does not represent any specific data format, leaving out all implementation details and notions of sparsity. Then we describe three refinements of this model that introduce structure that supports a sparse representation: the DOK format, the ELL format, and the Yale format.  In each of these refinements we determine the appropriate representation invariants as well as the abstraction functions and show that the refinement is valid.
+In this section we introduce some basic modeling elements used throughout the study, and then we describe four models.  First we describe an abstract model of a matrix that does not represent any specific data format, leaving out all implementation details and notions of sparsity. Then we describe three refinements of this model which introduce structure that supports a sparse representation: the DOK format, the ELL format, and the CSR format.  For each matrix representation we model initialization, update, and matrix-vector multiplication.  For each refinement, we provide representation invariants and abstraction functions to show that the refinement is sound.
 
-By design, Alloy provides no means of working with floating point values.  It includes integers, but in a limited scope, and so they are not useful when attempting to work with the complete integer set, as might be the case when considering values that could be stored in a sparse matrix.  This is inconsequential, however, as we only aim to reason about the structural complexities of sparse matrix formats.  Therefore, it is sufficient to create an abstract distinction between zero and non-zero values.  Our models employ a Value signature, representing any numerical value, and a Zero signature, an extension of Value, that represents the value zero.  Depending on the scope, this creates an abstract set of ``values'' that we can use to populate matrices in our models.
+By design, Alloy provides no means of working with floating point values.  It includes integers, but in a limited scope, and so they are not useful when attempting to work with the complete integer set, as might be the case when considering values that could be stored in a sparse matrix.  This is inconsequential, however, as we only aim to reason about the structural complexities of sparse matrix formats.  Therefore, it is sufficient to create an abstract distinction between zero and non-zero values.  Our models employ a Value signature, representing any numerical value, and a Zero signature, an extension of Value, that represents the value zero.  Depending on the scope, this creates an abstract set of values, shown in \figurename~\ref{fig:values}, that we can use to populate matrices in our models.
 
+\begin{figure}
 \begin{displaymath}
 Value = \{Zero, Value_0, Value_1, \ldots, Value_n\}
 \end{displaymath}
+\caption{The set of abstract values.}
+\label{fig:values}
+\end{figure}
+
+Throughout these models we make use of predicate overloading to define various predicates that can be applied universally.  Overloading is enabled by Alloy's type system and type checker, which allow expressions to share a name as long as there is no ambiguity when resolving types.  For example, the \texttt{rowInRange} and \texttt{colInRange} predicates are used to determine if a row or column index is within the bounds of some matrix.  The predicate definitions for the three sparse matrix types considered in this study are shown in \figurename~\ref{fig:overload}.  The \texttt{rowInRange} predicate evaluates to true if the value \texttt{row} is greater than or equal to zero and less than the number of rows in, for example, the DOK matrix \texttt{d}, false otherwise.  Similarly, the \texttt{colInRange} predicate evaluates to true if the value \texttt{col} is greather than or equal to zero and less than the number of columns in the DOK matrix \texttt{d}.  Additional usage of overloading found in these models includes the representation invariant, which is always named \texttt{repInv}, and the abstraction function, which is always named \texttt{alpha}.
+
+\begin{figure}
+\centering
+\begin{myquote}\small{\texttt{\\
+\Bpred rowInRange[d: DOK, row: Int] \{\ldots\}\\
+\Bpred rowInRange[e: ELL, row: Int] \{\ldots\}\\
+\Bpred rowInRange[c: CSR, row: Int] \{\ldots\}\\
+\Bpred colInRange[d: DOK, col: Int] \{\ldots\}\\
+\Bpred colInRange[e: ELL, col: Int] \{\ldots\}\\
+\Bpred colInRange[c: CSR, col: Int] \{\ldots\}\\
+}}
+\end{myquote}
+\caption{Predicate overloading of \texttt{rowInRange} and \texttt{colInRange}}.
+\label{fig:overload}
+\end{figure}
 
 \subsection{Abstract Sparse Matrix}
 
-What is the specification we are modeling?  2D matrix of numerical values: zero or more rows, zero or more columns, a numerical value at every row, column index location.
-
-Our abstract model of a two-dimensional matrix, sparse or otherwise, is defined by the Matrix signature, shown in \figurename~\ref{model:abstract}.  There are three fields defined on the Matrix signature representing (1) the number of rows in the matrix, (2) the number of columns in the matrix, and (3) the values and their locations in the matrix.
+We begin with an abstract model of a two-dimensional mathematical matrix, sparse or otherwise, defined by the Matrix signature as shown in \figurename~\ref{model:abstract}.  There are three fields defined on the Matrix signature representing (1) the number of rows in the matrix, (2) the number of columns in the matrix, and (3) the values and their locations in the matrix.  This model makes no assumptions about the contents or structure of the matrix, and will be the arbiter of correctness when determining if a refinement is sound.
 
 \begin{figure}
 \centering
@@ -152,9 +173,44 @@ Our abstract model of a two-dimensional matrix, sparse or otherwise, is defined 
 
 The representation invariant is specified as a signature fact so that it is applied to every member of the Matrix signature.  The representation invariant states that (1) the number of rows and columns in a matrix are each greater than or equal to zero, (2) all row, column indices fall within bounds, (3) the total number of values in the matrix is $\texttt{rows}\times\texttt{cols}$, and (4) there is a value at every $\left(i, j\right)$ index pair.
 
-This model represents any two-dimensional matrix that contains values.  As it is our highest level of abstraction, it makes no assertions about what values may be included in the matrix or how those values must be stored.
+\subsubsection{Matrix Initialization}
 
-Show an instance here, using visualizations from Alloy Instances preferably.
+\begin{figure}
+\centering
+\begin{myquote}\small{\texttt{\\
+\Bpred init [m: Matrix, rows, cols: Int] \{\\
+\TA m.nrows = rows\\
+\TA m.ncols = cols\\
+\TA \Blet valset = m.values[\Buniv][\Buniv] |\\
+\TB valset = Zero \Bor \Bno valset\\
+\}
+}}
+\end{myquote}
+\end{figure}
+
+\subsubsection{Matrix Updates}
+
+\begin{figure}
+\centering
+\begin{myquote}\small{\texttt{\\
+\Bpred update [m, m': Matrix,\\
+\TD row, col: \Bint,\\
+\TD val: Value] \{\\
+\TA m.rows = m'.rows\\
+\TA m.cols = m'.cols\\
+\TA rowInRange[m, row]\\
+\TA colInRange[m, col]\\
+\TA \Blet curr = m.values[row][col] |\\
+\TB m'.values =\\
+\TC m.values\\
+\TC - row->col->curr\\
+\TC + row->col->val\\
+\}
+}}
+\end{myquote}
+\caption{Abstract matrix update.}
+\label{update:abstract}
+\end{figure}
 
 \subsection{DOK Format}
 
@@ -175,15 +231,37 @@ The DOK signature, shown in \figurename~\ref{model:dok}, resembles the Matrix si
 \label{model:dok}
 \end{figure}
 
-In order to limit the scope of instances to only those that accurately represent the properties of an associative array that stores a sparse matrix, we have created the following representation invariant:
+The representation invariant for the DOK format, shown in \figurename~\ref{model:dokrep}, states that (1) there are no zeros stored as values, (2) all row, column indices used as keys fall within the bounds of the matrix, and (3) all row, column indices that fall within the bounds of the matrix may appear at most once as keys in the dictionary.
 
-\begin{itemize}
-  \item The integer value \(rows \geq 0\)
-  \item The integer value \(cols \geq 0\)
-  \item There are no zeros stored as values
-  \item All row, column pairs fall within bounds
-  \item All row, column pairs may appear only once
-\end{itemize}
+\begin{figure}
+\centering
+\begin{myquote}\small{\texttt{\\
+\Bpred repInv [d: DOK] \{\\
+\TA Zero \Bnot \Bin d.dict[\Buniv][\Buniv]\\
+\TA \Ball i, j: \Bint~\{\\
+\TB i$\rightarrow$j \Bin d.dict.univ \Bimplies\\
+\TC rowInRange[d, i] \Band\\
+\TC colInRange[d, j]\\
+\TA \}\\
+\TA \Ball i, j: \Bint~\{\\
+\TB rowInRange[d, i] \Band\\
+\TB colInRange[d, j] \Bimplies\\
+\TC \Blone v: Value | i$\rightarrow$j$\rightarrow$v \Bin d.dict\\
+\TA \}\\
+\}\\
+}}
+\end{myquote}
+\caption{DOK Representation Invariant.}
+\label{model:dokrep}
+\end{figure}
+
+% \begin{itemize}
+%   \item The integer value \(rows \geq 0\)
+%   \item The integer value \(cols \geq 0\)
+%   \item There are no zeros stored as values
+%   \item All row, column pairs fall within bounds
+%   \item All row, column pairs may appear only once
+% \end{itemize}
 
 The abstraction function:
 
@@ -281,7 +359,7 @@ The CSR format, making no assumptions about the sparsity structure of the matrix
 }}
 \end{myquote}
 \caption{CSR Model.}
-\label{model:yale}
+\label{model:csr}
 \end{figure}
 
 Need to describe the ``get'' predicate and why it is needed.
@@ -299,7 +377,7 @@ The representation invariant:
 \begin{figure}
 \centering
 \begin{myquote}\small{\texttt{\\
-\Bpred repInv [y: Yale] \{\\
+\Bpred repInv [c: CSR] \{\\
 \TA Zero \Bnot \Bin y.A.elems\\
 \TA \Ball i: y.IA.rest.elems |\\
 \TB gte[i, 0] \Band\\
@@ -344,6 +422,10 @@ The representation invariant:
 % 	\item The difference between any two consecutive values in IA must be \(\leq ncols\)
 % 	\item Values in JA must be unique per row
 % \end{itemize}
+
+\section{Sparse Matrix Code}
+
+Show how representation invariants can be used in code.
 
 \bibliographystyle{IEEEtran}
 \bibliography{IEEEabrv,sparse,mybib}
