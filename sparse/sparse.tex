@@ -21,6 +21,7 @@
 \def\TB{\makebox[24pt]{}}
 \def\TC{\makebox[36pt]{}}
 \def\TD{\makebox[48pt]{}}
+\def\TE{\makebox[60pt]{}}
 
 % boldface for Alloy keywords
 \def\Bopen{\textbf{open} }
@@ -159,23 +160,7 @@ We begin with an abstract model of a two-dimensional mathematical matrix, sparse
 
 \begin{figure}
 \centering
-\begin{myquote}\small{\texttt{\\
-\Bsig Matrix \{\\
-\TA  nrows, ncols: \Bint,\\
-\TA  values: \Bint~$\rightarrow$~\Bint~$\rightarrow$~Value\\
-\} \{\\
-\TA nrows $\geq$ 0\\
-\TA ncols $\geq$ 0\\
-\TA \Ball i, j: \Bint~$|$\\
-\TB i $\rightarrow$ j \Bin values.univ \Bimplies\\
-\TC 0 $\leq$ i \Band i $<$ nrows \Band\\
-\TC 0 $\leq$ j \Band j $<$ ncols\\
-\TA \Blet nvals = mul[nrows, ncols] $|$\\
-\TB \#values = nvals \Band\\
-\TB \#values.univ = nvals\\
-\}
-}}
-\end{myquote}
+\input{models/model-abstract.tex}
 \caption{The abstract matrix model.}
 \label{model:abstract}
 \end{figure}
@@ -186,15 +171,7 @@ The representation invariant is specified as a signature fact so that it is appl
 
 \begin{figure}
 \centering
-\begin{myquote}\small{\texttt{\\
-\Bpred init [m: Matrix, rows, cols: Int] \{\\
-\TA m.nrows = rows\\
-\TA m.ncols = cols\\
-\TA \Blet valset = m.values[\Buniv][\Buniv] |\\
-\TB valset = Zero \Bor \Bno valset\\
-\}
-}}
-\end{myquote}
+\input{models/init-abstract.tex}
 \caption{The abstract matrix initialization.}
 \label{init:abstract}
 \end{figure}
@@ -205,27 +182,12 @@ The \texttt{init} predicate shown in \figurename~\ref{init:abstract} is used to 
 
 \begin{figure}
 \centering
-\begin{myquote}\small{\texttt{\\
-\Bpred update [m, m': Matrix,\\
-\TD row, col: \Bint,\\
-\TD val: Value] \{\\
-\TA m.rows = m'.rows\\
-\TA m.cols = m'.cols\\
-\TA rowInRange[m, row]\\
-\TA colInRange[m, col]\\
-\TA \Blet curr = m.values[row][col] |\\
-\TB m'.values =\\
-\TC m.values\\
-\TC - row$\rightarrow$col$\rightarrow$curr\\
-\TC + row$\rightarrow$col$\rightarrow$val\\
-\}
-}}
-\end{myquote}
+\input{models/update-abstract.tex}
 \caption{The abstract matrix update.}
 \label{update:abstract}
 \end{figure}
 
-The \texttt{update} predicate shown in \figurename~\ref{update:abstract} is used to perform an update.  We consider a matrix update to be a transition in which a single value of a matrix is changed.  For all matrices, this includes four possible transitions: non-zero to non-zero, non-zero to zero, zero to non-zero, and zero to zero, or stutter.
+The \texttt{update} predicate shown in \figurename~\ref{update:abstract} is used to perform an update.  We consider a matrix update to be a transition in which a single value of a matrix is changed and the matrix does not change size.  For all matrices, this includes four possible transitions: non-zero to non-zero, non-zero to zero, zero to non-zero, and zero to zero, or stutter.
 
 \subsection{DOK Format}
 
@@ -235,82 +197,52 @@ The DOK signature, shown in \figurename~\ref{model:dok}, resembles the Matrix si
 
 \begin{figure}
 \centering
-\begin{myquote}\small{\texttt{\\
-\Bsig DOK \{\\
-\TA nrows, ncols: \Bint,\\
-\TA dict: \Bint~$\rightarrow$~\Bint~$\rightarrow$~Value\\
-\}
-}}
-\end{myquote}
+\input{models/model-dok.tex}
 \caption{The DOK Model.}
 \label{model:dok}
 \end{figure}
 
-The representation invariant for the DOK format, shown in \figurename~\ref{model:dokrep}, states that (1) there are no zeros stored as values, (2) all row, column indices used as keys fall within the bounds of the matrix, and (3) all row, column indices that fall within the bounds of the matrix may appear at most once as keys in the dictionary.
+\subsubsection{Representation Invariant}
+
+The representation invariant for the DOK format, shown in \figurename~\ref{repinv:dok}, states that (1) there are no zeros stored as values, (2) all row, column indices used as keys fall within the bounds of the matrix, and (3) all row, column indices that fall within the bounds of the matrix may appear at most once as keys in the dictionary.
 
 \begin{figure}
 \centering
-\begin{myquote}\small{\texttt{\\
-\Bpred repInv [d: DOK] \{\\
-\TA Zero \Bnot \Bin d.dict[\Buniv][\Buniv]\\
-\TA \Ball i, j: \Bint~\{\\
-\TB i$\rightarrow$j \Bin d.dict.univ \Bimplies\\
-\TC rowInRange[d, i] \Band\\
-\TC colInRange[d, j]\\
-\TA \}\\
-\TA \Ball i, j: \Bint~\{\\
-\TB rowInRange[d, i] \Band\\
-\TB colInRange[d, j] \Bimplies\\
-\TC \Blone v: Value | i$\rightarrow$j$\rightarrow$v \Bin d.dict\\
-\TA \}\\
-\}\\
-}}
-\end{myquote}
+\input{models/repinv-dok.tex}
 \caption{The DOK representation invariant.}
-\label{model:dokrep}
+\label{repinv:dok}
 \end{figure}
 
-% \begin{itemize}
-%   \item The integer value \(rows \geq 0\)
-%   \item The integer value \(cols \geq 0\)
-%   \item There are no zeros stored as values
-%   \item All row, column pairs fall within bounds
-%   \item All row, column pairs may appear only once
-% \end{itemize}
+\subsubsection{Abstraction Function}
 
 The abstraction function provides a mapping from the DOK representation of a matrix to our abstract representation of a matrix.  The \texttt{alpha} predicate, shown in \figurename~\ref{alpha:dok}, states that the DOK matrix $d$ is a refinement of Matrix $m$ if (1) $d$ has the same number of rows and columns as $m$, (2) all row, column index pairs that map to a value in the $d$ dictionary map to the same value at the same location in $m$, and (3) all in-range row, column pairs \emph{not} used as keys in the $d$ dictionary map to zeros in $m$.
 
 \begin{figure}
 \centering
-\begin{myquote}\small{\texttt{\\
-\Bpred alpha [d: DOK, m: Matrix] \{\\
-\TA m.rows = d.rows\\
-\TA m.cols = d.cols\\
-\TA \Ball i, j: \Bint, v: Value |\\
-\TB i$\rightarrow$j$\rightarrow$v \Bin d.dict \Bimplies\\
-\TC i$\rightarrow$j$\rightarrow$v \Bin m.values\\
-\TA \Ball i, j: Int |\\
-\TB rowInRange[d, i] and\\
-\TB colInRange[d, j] and\\
-\TB i$\rightarrow$j not in d.dict.\Buniv~\Bimplies\\
-\TC i$\rightarrow$j$\rightarrow$Zero \Bin m.values\\
-\}
-}}
-\end{myquote}
+\input{models/alpha-dok.tex}
 \caption{The DOK abstraction function}
 \label{alpha:dok}
 \end{figure}
 
-% \begin{itemize}
-%   \item \(nrows\) equal to number of rows in matrix
-%   \item \(ncols\) equal to number of columns in matrix
-%   \item All \((i, j), v\) key, value pairs map to corresponding values in the matrix
-%   \item All \((i, j)\) pairs \emph{not} in DOK map to zeros in the matrix
-% \end{itemize}
-
 \subsubsection{Matrix Initialization}
 
+Initialization of the DOK matrix, shown in \figurename~\ref{init:dok}, requires setting the size of the matrix and creating an empty dictionary.  Because the abstraction function maps indices that aren't included as keys to zero, an empty dictionary represents a matrix in which all values are zero.
+
+\begin{figure}
+\centering
+\input{models/init-dok.tex}
+\caption{The DOK initialization predicate.}
+\label{init:dok}
+\end{figure}
+
 \subsubsection{Matrix Update}
+
+\begin{figure}
+\centering
+\input{models/update-dok.tex}
+\caption{The DOK update predicate.}
+\label{update:dok}
+\end{figure}
 
 \subsection{ELL Format}
 
@@ -322,66 +254,7 @@ The Compressed Sparse Row (CSR) format, shown in \figurename~\ref{image:csr}, us
 
 \begin{figure}
 \centering
-
-\begin{tikzpicture}
-
-\begin{scope}[every node/.style={minimum size=0.75cm-2*\pgflinewidth, outer sep=0pt},scale=0.75]
-\draw (0,0) grid +(5,1);
-\node (ia) at (0.5, 0.5) {0};
-\node at (1.5, 0.5) {1};
-\node at (2.5, 0.5) {3};
-\node at (3.5, 0.5) {4};
-\node at (4.5, 0.5) {6};
-
-\draw(0,-1) grid +(6,-2);
-
-\node[fill=green!15] (ja) at (0.5, -1.5) {0};
-\node[fill=blue!15] at (1.5, -1.5) {1};
-\node[fill=blue!15] at (2.5, -1.5) {2};
-\node[fill=red!15] at (3.5, -1.5) {2};
-\node[fill=yellow!15] at (4.5, -1.5) {0};
-\node[fill=yellow!15] at (5.5, -1.5) {3};
-
-\node[fill=green!15] (a) at (0.5, -2.5) {4};
-\node[fill=blue!15] at (1.5, -2.5) {8};
-\node[fill=blue!15] at (2.5, -2.5) {15};
-\node[fill=red!15] at (3.5, -2.5) {16};
-\node[fill=yellow!15] at (4.5, -2.5) {23};
-\node[fill=yellow!15] at (5.5, -2.5) {42};
-
-\draw [thick,->] (0.5,0) to[out=-90, in=90] (0, -1.0);
-\draw [thick,->] (1.5,0) to[out=-90, in=90] (1, -1.0);
-\draw [thick,->] (2.5,0) to[out=-90, in=90] (3, -1.0);
-\draw [thick,->] (3.5,0) to[out=-90, in=90] (4, -1.0);
-\draw [thick,->] (4.5,0) to[out=-90, in=90] (6, -1.0);
-
-\node[left = 0.25cm of ia] {$\mathrm{IA}$ (index ranges)};
-\node[left = 0.25cm of ja] {$\mathrm{JA}$ (columns)};
-\node[left = 0.25cm of a]  {$\mathrm{A}$ (values)};
-\end{scope}
-
-\matrix[
-    matrix of math nodes,
-    row sep=.5ex,
-    column sep=.5ex,
-    left delimiter=(,right delimiter=),
-    nodes={text width=.75em, text height=1.5ex, text depth=.5ex, align=center}
-    ] (m) at (1.5, 3)
-    {
-    4 & 0 & 0 & 0 \\
-    0 & 8 & 15 & 0 \\
-    0 & 0 & 16 & 0 \\
-    23 & 0 & 0 & 42 \\
-    };
-
-\begin{scope}[on background layer]
-    \node[fit=(m-1-1)(m-1-4), draw=green!15, fill=green!15] {};
-    \node[fit=(m-2-1)(m-2-4), draw=blue!15, fill=blue!15] {};
-    \node[fit=(m-3-1)(m-3-4), draw=red!15, fill=red!15] {};
-    \node[fit=(m-4-1)(m-4-4), draw=yellow!15, fill=yellow!15] {};
-\end{scope} 
-
-\end{tikzpicture}
+\input{models/image-csr.tex}
 \caption{The CSR format.}
 \label{image:csr}
 \end{figure}
@@ -390,78 +263,37 @@ The CSR format, making no assumptions about the sparsity structure of the matrix
 
 \begin{figure}
 \centering
-\begin{myquote}\small{\texttt{\\
-\Bsig CSR \{\\
-\TA  nrows, ncols: \Bint,\\
-\TA  A: \Bseq Value,\\
-\TA  IA, JA: \Bseq \Bint,\\
-\}
-}}
-\end{myquote}
-\caption{CSR Model.}
+\input{models/model-csr.tex}
+\caption{The CSR model.}
 \label{model:csr}
 \end{figure}
 
 Need to describe the ``get'' predicate and why it is needed.
 
+\begin{figure}
+\centering
+\input{models/get-csr.tex}
+\caption{The get function used in the CSR model.}
+\label{get:csr}
+\end{figure}
+
 The abstraction function:
 
-\begin{itemize}
-  \item \texttt{nrows} equal to number of rows in matrix
-  \item \texttt{ncols} equal to number of columns in matrix
-  \item For all integers $i \in [0, \texttt{nrows})$ and $j \in [0, \texttt{ncols})$, the value of the ``get'' predicate at \((i, j)\) is equal to the value at location \((i, j)\) in the matrix.
-\end{itemize}
+\begin{figure}
+\centering
+\input{models/alpha-csr.tex}
+\caption{The CSR abstraction function.}
+\label{alpha:csr}
+\end{figure}
 
 The representation invariant:
 
 \begin{figure}
 \centering
-\begin{myquote}\small{\texttt{\\
-\Bpred repInv [c: CSR] \{\\
-\TA Zero \Bnot \Bin y.A.elems\\
-\TA \Ball i: y.IA.rest.elems |\\
-\TB gte[i, 0] \Band\\
-\TB lte[i, mul[y.rows, y.cols]]\\
-\TA \Ball j: y.JA.elems |\\
-\TB gte[j, 0] \Band\\
-\TB lt[j, y.cols]\\
-\TA y.IA[0] = 0\\
-\TA y.IA.last = \#y.A\\
-\TA \#y.IA $>$ 1 \Bimplies\\
-\TC gt[y.IA.last, y.IA.butlast.last]\\
-\TA \#y.A = \#y.JA\\
-\TA lte[\#y.A, mul[y.rows, y.cols]]\\
-\TA lte[\#y.IA, add[y.rows, 1]]\\
-\TA \Ball i: y.IA.inds |\\
-\TB i > 0 \Bimplies\\
-\TC \Blet a = y.IA[sub[i, 1]],\\
-\TC       b = y.IA[i],\\
-\TC       n = sub[b, a] \{\\
-\TD   b $\geq$ a\\
-\TD   n $\leq$ y.cols\\
-\TD   n = \#y.JA.subseq[a, sub[b, 1]].elems\\
-\TC \}\\
-\}
-}}
-\end{myquote}
+\input{models/repinv-csr.tex}
+\caption{The CSR representation invariant.}
+\label{repinv:csr}
 \end{figure}
-
-% \begin{itemize}
-%   \item The integer value \(nrows \geq 0\)
-%   \item The integer value \(ncols \geq 0\)
-% 	\item There are no zeros stored as values
-% 	\item All values in IA \(\leq nrows \times ncols\)
-% 	\item All values in JA \(< ncols\)
-% 	\item The first value in IA is zero
-% 	\item The last value in IA is the length of A
-% 	\item The last value of IA is not repeated
-% 	\item A and JA are the same length
-% 	\item The max length of A is \(nrows \times ncols\)
-% 	\item The max length of IA is \(nrows + 1\)
-% 	\item The values in IA are monotonically increasing
-% 	\item The difference between any two consecutive values in IA must be \(\leq ncols\)
-% 	\item Values in JA must be unique per row
-% \end{itemize}
 
 \section{Sparse Matrix Code}
 
