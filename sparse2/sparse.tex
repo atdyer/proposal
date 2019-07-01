@@ -1,8 +1,9 @@
-\documentclass[11pt,conference]{IEEEtran}
-\title{Modeling Sparse Matrices}
+% \documentclass[11pt,conference]{IEEEtran}
+\documentclass[sigconf]{acmart}
 
 \usepackage{listings}
 \usepackage{tikz}
+\usepackage[]{algorithm2e}
 
 \usetikzlibrary{matrix, fit}
 \usetikzlibrary{backgrounds}
@@ -12,36 +13,48 @@
 \input{models/alloy.tex}
 
 \begin{document}
+\pagestyle{plain}
+\title{Modeling Sparse Matrices}
 \maketitle
 
 \section{Modeling Sparse Matrix Format Translations}
 
-Why might one want to translate sparse matrix formats?
+% https://www.mcs.anl.gov/petsc/documentation/linearsolvertable.html
+% http://www.netlib.org/utk/people/JackDongarra/la-sw.html
+Translating a sparse matrix from one format to another may be necessary in a number of scenarios.  For example, it is common practice to assemble a sparse matrix using a format that is efficient for incremental assembly and to translate the fully assembled matrix to a format that is efficient for use in a solver.  In the context of ADCIRC++, we wish to compare the performance of a number of solvers in a number of different storm surge scenarios.  Because each solver requires a different sparse matrix format, we must show that the same matrix is being used across solvers, regardless of format.
 
-For a translation to be considered valid, the final state must preserve the representation invariant of the target format as well as represent the same abstract matrix as the original format.  Intermediate states, however, do not need to preserve the representation invariant.  The Alloy assertion used to model this relationship is shown in \figurename~\ref{alloy:csrellvalid}, which states that if the ELL matrix, e, is a valid representation of the abstract matrix, m, and the translation is applied, giving the CSR matrix, c, then it follows that c is a valid CSR matrix that represents the abstract matrix m.
+ADCIRC and ADCIRC++ both use the ELL format in conjuction with the ITPACKV solver.  The format most commonly used in the solvers we wish to test (TODO: ITPACK, Pardiso, etc.) is the Compressed Sparse Row (CSR) format, and so we will model the ELL to CSR translation in this section.  A similar approach is to be taken for other formats, including the Block Compressed Sparse Row (BSR) used in the cuSPARSE library, and the Compressed Sparse Column (CSC) format used in the Armadillo library.
+
+\LinesNumbered
+\begin{algorithm}
+\input{algorithms/ellcsr.tex}
+\caption{The ELL to CSR translation algorithm.}
+\label{algorithm:ellcsr}
+\end{algorithm}
+\LinesNotNumbered
+
+An ELL to CSR translation algorithm is provided by the SPARSEKIT library, and a Python version of this algorithm is found in \figurename~\ref{algorithm:ellcsr}.
 
 \begin{figure}
 \input{models/ellcsr-0.tex}
-\caption{Verifying that the ELL to CSR translation is valid}
-\label{alloy:csrellvalid}
+\caption{The ELL to CSR Model}
+\label{alloy:csrell}
 \end{figure}
 
-The translation from ELL to CSR in Alloy is performed by quantifying the state of the algorithm for every step in the innermost loop.  TODO: create an image that has a sequence of circles. Each circle has the state of the innermost loop, i.e., the values of i, k, and kp.  Then talk about how the values of i, k, and kp are used to relate the structure of the two states using the relationships defined in the algorithm.
+The translation from ELL to CSR in Alloy is performed by quantifying the state of the algorithm at every step in the innermost loop.  As seen in Algorithm~\ref{algorithm:ellcsr}, there are three variables used for indexing, $i$, $k$, and $kpos$, that need to be quantified.  The values of $i$ and $k$ are easily generated in Alloy using an \textbf{all} statement, but the value of $kpos$ is less straightforward.
+It can optionally increase by one on line 8, at the end of the innermost loop, depending on whether or not the current matrix value is nonzero.
+%It can optionally increase by one at the end of the innermost loop, depending on whether or not the current matrix value is nonzero.
+%As a result, the value of $kpos$ at the end of the $i$ loop may not be the same as during the $k$ loop.
+As a result, the value of $kpos$ at line 9, where an IA value is set, may not be the same as the value of $kpos$ at lines 6 and 7, where values of A and JA are set.
+Therefore, we model the value of $kpos$ as a sequence of integers in which the value at index $it$ is the value of $kpos$ before line 8 and the value at index $it+1$ is the value of $kpos$ after line 8.
+%Therefore, we model the value of $kpos$ as a sequence of integers in which the value at index $it$ is the value of $kpos$ at the \emph{beginning} of the current $k$ loop, and the value at index $it+1$ is the value of $kpos$ at the \emph{end} of the current $k$ loop.  
+This sequence is generated using the \textbf{genkpos} predicate found in \figurename~\ref{alloy:csrell}.  With the sequence generated, the value of $kpos$ at any location inside of the algorithm can now be determined using the values of $i$ and $k$.
 
-% \begin{figure}
-% \begin{lstlisting}[language=Python]
-% for i in range(nrows):
-%   for k in range(maxnz):
-%     idx = i * maxnz + k
-%     if cols[idx] != -1:
-%       A[kpos] = vals[idx]
-%       JA[kpos] = cols[idx]
-%       kpos += 1
-%     IA[i+1] = kpos
-% \end{lstlisting}
-% \caption{ELL to CSR Algorithm}
-% \label{algorithm:ellcsr}
-% \end{figure}
+The \textbf{ellcsr} predicate generates a sequence of $kpos$ values using the \textbf{genkpos} predicate\footnote{The $kpos$ sequence is generated using \textbf{some}, which here is a higher-order quantification.  Alloy cannot perform higher-order quantification, but is able to eliminate it in some cases, such as this one, by using skolemization.  We expect there to be only a single possible sequence of $kpos$ values for any given translation, and so the \textbf{one} quantifier should be used instead.  This quantification cannot be eliminated using skolemization, and so we have verified this property using Alloy*, an extension of Alloy that permits higher-order quantification~\cite{alloy*}.} and performs the translation using the same indexing pattern used in the algorithm.  Indeed, the value of $kpos$ could be generated directly within the \textbf{ellcsr} predicate, but we found that the separation made it easier to reason about two key components separately: (1) the nondeterministic evolution of the $kpos$ value and (2) the correct indexing of values.
 
+For a translation to be considered valid, the final state must preserve the representation invariant of the target format as well as represent the same abstract matrix as the original format.  Intermediate states, however, do not need to preserve the representation invariant.  The Alloy assertion used to model this relationship is shown in \figurename~\ref{alloy:csrell}, which states that if the ELL matrix $e$ is a valid representation of the abstract matrix $m$ and the translation is applied, giving the CSR matrix $c$, then it follows that $c$ is a valid CSR matrix that represents the abstract matrix $m$.  The scope used for this check shows that the translation is valid for matrices up to 6x6.
+
+\bibliographystyle{IEEEtran}
+\bibliography{IEEEabrv,sparse,mybib}
 
 \end{document}
