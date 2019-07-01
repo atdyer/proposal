@@ -1,0 +1,47 @@
+\documentclass[11pt,conference]{IEEEtran}
+\title{Modeling Sparse Matrices}
+
+\usepackage{listings}
+\usepackage{tikz}
+
+\usetikzlibrary{matrix, fit}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{positioning}
+\usetikzlibrary{cd}
+
+\input{models/alloy.tex}
+
+\begin{document}
+\maketitle
+
+\section{Modeling Sparse Matrix Format Translations}
+
+Why might one want to translate sparse matrix formats?
+
+For a translation to be considered valid, the final state must preserve the representation invariant of the target format as well as represent the same abstract matrix as the original format.  Intermediate states, however, do not need to preserve the representation invariant.  The Alloy assertion used to model this relationship is shown in \figurename~\ref{alloy:csrellvalid}, which states that if the ELL matrix, e, is a valid representation of the abstract matrix, m, and the translation is applied, giving the CSR matrix, c, then it follows that c is a valid CSR matrix that represents the abstract matrix m.
+
+\begin{figure}
+\input{models/ellcsr-0.tex}
+\caption{Verifying that the ELL to CSR translation is valid}
+\label{alloy:csrellvalid}
+\end{figure}
+
+The translation from ELL to CSR in Alloy is performed by quantifying the state of the algorithm for every step in the innermost loop.  TODO: create an image that has a sequence of circles. Each circle has the state of the innermost loop, i.e., the values of i, k, and kp.  Then talk about how the values of i, k, and kp are used to relate the structure of the two states using the relationships defined in the algorithm.
+
+% \begin{figure}
+% \begin{lstlisting}[language=Python]
+% for i in range(nrows):
+%   for k in range(maxnz):
+%     idx = i * maxnz + k
+%     if cols[idx] != -1:
+%       A[kpos] = vals[idx]
+%       JA[kpos] = cols[idx]
+%       kpos += 1
+%     IA[i+1] = kpos
+% \end{lstlisting}
+% \caption{ELL to CSR Algorithm}
+% \label{algorithm:ellcsr}
+% \end{figure}
+
+
+\end{document}
