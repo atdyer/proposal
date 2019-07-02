@@ -21,6 +21,10 @@
 \providecommand{\BIBdecl}{\relax}
 \BIBdecl
 
+\bibitem{sparsekit}
+Y.~Saad, ``Sparskit: a basic tool kit for sparse matrix computations - version
+  2,'' 1994.
+
 \bibitem{alloy*}
 A.~{Milicevic}, J.~P. {Near}, E.~{Kang}, and D.~{Jackson}, ``Alloy*: A
   general-purpose higher-order relational constraint solver,'' in \emph{2015
