@@ -1,0 +1,37 @@
+% \documentclass[11pt,conference]{IEEEtran}
+\documentclass[sigconf]{acmart}
+
+\usepackage{bm}
+\usepackage{listings}
+\usepackage{tikz}
+\usepackage[]{algorithm2e}
+
+\usetikzlibrary{matrix, fit}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{positioning}
+\usetikzlibrary{cd}
+
+\begin{document}
+\pagestyle{plain}
+\title{SpMV Sections}
+\maketitle
+
+Sparse linear algebra libraries and the methods they employ are vitally important in the domain of scientific computing (TODO: why?).  Of particular interest is the sparse matrix-vector product, which solves $y = \bm{A}x$ where $\bm{A}$ is a sparse matrix and the vectors $y$ and $x$ are dense.  Because SpMV usage is often highly repetitive within, e.g., iterative solvers, performance improvements via novel algorithms and the exploitation of modern hardware are areas of ongoing research (TODO: citations).
+
+...why is SpMV difficult? Things like array indirection, varying sparsity patterns, it's memory bound...
+
+As modern hardware introduces higher levels of parallelism and SpMV algorithms become more complex, the likelihood of introducing subtle bugs becomes decidedly higher.  In this section we present a method for reasoning about the structural complexities and verifying the correctness of SpMV algorithms.  We first model an abstract matrix-vector multiplication and subsequently demonstrate that a CSR SpMV algorithm is a valid functional refinement.
+
+\section{Abstract Matrix-Vector Multiplication}
+
+In order to demonstrate that an SpMV algorithm is correct, we must first create a model of matrix-vector multiplication to act as the arbiter of correctness.  The result of a matrix-vector multiplication is a densely populated vector in which each value is the dot product of a single row of the matrix with the other vector.  A dot product is simply a sum of products in which each product is of two values located at the same index within two vectors, as shown in ~\figurename~\ref{fig:mvm}.
+
+\begin{figure}
+\input{images/mvm.tex}
+\caption{MVM and Dot Product}
+\label{fig:mvm}
+\end{figure}
+
+\bibliography{sparse}
+
+\end{document}
