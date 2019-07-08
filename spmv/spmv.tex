@@ -135,13 +135,13 @@ In this section we model a CSR matrix-vector multiplication algorithm and demons
 
 Recall that the CSR format contains three arrays.  The arrays \texttt{A} and \texttt{JA} are equal in length and contain values and the column indices at which those values appear, respectively.  The third array, \texttt{IA}, contains integers used to index into \texttt{A} and \texttt{JA}.  Each consecutive pair of indices represents a subset of the \texttt{A} and \texttt{JA} arrays corresponding to a single row of the matrix.  The first pair of indices represents the first row, the second pair represents the second row, and so on.
 
-% \LinesNumbered
+\LinesNumbered
 \begin{algorithm}
 \input{algorithms/csrmvm.tex}
 \caption{The CSR MVM algorithm.}
 \label{algorithm:csrmvm}
 \end{algorithm}
-% \LinesNotNumbered
+\LinesNotNumbered
 
 Algorithm~\ref{algorithm:csrmvm} performs the matrix-vector multiplication of a CSR matrix with the vector \texttt{x}, resulting in the vector \texttt{b}.  In this algorithm, the inner loop is responsible for iterating over consecutive pairs of indices in the \texttt{IA} array.  Within this inner loop, the current value and column are extracted from the \texttt{A} and \texttt{JA} arrays, and the dot-product is accumulated at the appropriate location.
 
@@ -172,6 +172,14 @@ Algorithm~\ref{algorithm:csrmvm} performs the matrix-vector multiplication of a 
 \end{figure}
 
 We model Algorithm~\ref{algorithm:csrmvm} in the \texttt{MVM} predicate found in \figurename~\ref{alloy:mvmcsr}.  This predicate shares much in common with the abstract model, still requiring that matrix and vector dimensions are valid for a matrix-vector multiplication.  These lines, just as in the abstract model, have been removed for brevity.
+
+The row loop in the CSR model is modeled in the same way as the row loop in the abstract model, by using an \texttt{all} expression.  Before the inner loop, however, this model uses the \texttt{getrow} helper function to extract the columns and values from the CSR data structure.  This helper function, found in \figurename~\ref{alloy:getrow}, models the array dereferencing found in lines 3 and 4 of Algorithm~\ref{algorithm:csrmvm}.  Additionally, it returns the full set of column$\rightarrow$value pairs for a given row.  This allows us to reuse the \texttt{dotProd} predicate found in \figurename~\ref{alloy:dotprod}.  Note that the \texttt{getrow} function makes use of two additional helper functions, \texttt{rowcols} and \texttt{rowvals}, which extract the sequence of columns and values, respectively, for a given column.  Both can be found in the supplemental repository~\cite{repository}.
+
+Finally, we check that our algorithm correctly performs a matrix-vector multiplication in the \texttt{refines} assertion, found in \figurename~\ref{alloy:mvmcsrref}.  First, the lines that have been removed simply enforce the representation invariant for all of the arguments passed to the predicate.  Next, two matrix-vector multiplications are assembled: $\bm{M} * x = m_b$ and $\bm{C} * x = c_b$.  Additionally, the CSR matrix $\bm{C}$ and abstract matrix $\bm{M}$ are made equivalent using the abstraction function \texttt{alpha}.
+% Additionally, the CSR matrix $\bm{C}$ is made to be a refinement of the abstract matrix $\bm{M$} using the abstract function \texttt{alpha}, so that they represent the same matrix.  
+The assertion states that if $\bm{M}$ and $\bm{C}$ represent the same matrix and are multiplied by the same vector, $x$, then their respective solution vectors, $m_b$ and $c_b$ are equivalent.
+
+This assertion has been tested for up to 5$\times$5 matrices, and is found to be valid.  Therefore, we can conclude that within scope Algorithm~\ref{algorithm:csrmvm} is correct.
 
 \bibliographystyle{IEEEtran}
 \bibliography{sparse}
